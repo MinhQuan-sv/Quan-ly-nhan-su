@@ -1,0 +1,13 @@
+out/
+*.class
+
+.idea/
+*.iml
+.vscode/
+nbproject/private/
+*.nbattrs
+
+Thumbs.db
+desktop.ini
+
+QuanliNhansu.sql
