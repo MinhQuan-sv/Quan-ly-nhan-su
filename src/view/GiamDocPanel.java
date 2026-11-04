@@ -1,6 +1,8 @@
 package view;
 
 import dao.NhanVienDAO;
+import dao.DanhMucDAO;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
@@ -19,14 +21,17 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+
+import model.ChucVu;
 import model.NhanVien;
+import model.PhongBan;
 import util.DinhDang;
 
 public class GiamDocPanel extends JPanel {
     private static final long serialVersionUID = 1L;
 
     private static final String[] COT_QUAN_LY = {
-            "Mã QL", "Họ tên", "Phòng ban", "Số nhân viên", "Trạng thái", "Lương"
+            "Mã QL", "Tên quản lý", "Phòng ban", "Số nhân viên", "Trạng thái", "Lương"
     };
 
     private static final String[] COT_NHAN_VIEN = {
@@ -36,6 +41,7 @@ public class GiamDocPanel extends JPanel {
     private final NhanVien giamDoc;
 
     private final NhanVienDAO nhanVienDAO = new NhanVienDAO();
+    private final DanhMucDAO danhMucDAO = new DanhMucDAO();
 
     private final DefaultTableModel moHinhQuanLy = GiaoDien.moHinhBang(COT_QUAN_LY);
     private final JTable bangQuanLy = GiaoDien.bang(moHinhQuanLy);
@@ -43,12 +49,25 @@ public class GiamDocPanel extends JPanel {
     private final DefaultTableModel moHinhNhanVien = GiaoDien.moHinhBang(COT_NHAN_VIEN);
     private final JTable bangNhanVien = GiaoDien.bang(moHinhNhanVien);
 
-    private final JLabel lblTieuDeNhanVien =
-            GiaoDien.giaTri("Chọn một quản lý ở bảng trên để xem nhân viên cấp dưới.");
+    private final JLabel lblTieuDeNhanVien = GiaoDien.giaTri("Chọn một phòng ban ở bảng trên để xem nhân viên.");
     private final JLabel lblThongBao = new JLabel(" ");
 
-    private final List<NhanVien> danhSachQuanLy = new ArrayList<>();
+    // Class nội bộ lưu mỗi dòng của bảng trên
+    private static class DongBang {
+        String maPB;
+        String tenPB;
+        String maQL;
+        String tenQL;
+        String trangThai;
+        int soNhanVien;
+        NhanVien quanLy; // null nếu chưa có
+    }
+
+    private final List<DongBang> danhSachDong = new ArrayList<>();
     private final List<NhanVien> danhSachNhanVien = new ArrayList<>();
+
+    private final List<PhongBan> dsPhongBan = new ArrayList<>();
+    private final List<ChucVu> dsChucVu = new ArrayList<>();
 
     private JTable bangDangChon;
 
@@ -109,18 +128,24 @@ public class GiamDocPanel extends JPanel {
         JButton nutXem = GiaoDien.nut("Xem thông tin", GiaoDien.XAM);
         JButton nutLuong = GiaoDien.nut("Tăng lương", GiaoDien.XANH_LA);
         JButton nutThangChuc = GiaoDien.nut("Thăng chức quản lý", GiaoDien.XANH_CHINH);
+        JButton nutThem = GiaoDien.nut("Thêm nhân viên", GiaoDien.XANH_LA);
+        JButton nutSua = GiaoDien.nut("Sửa hồ sơ", GiaoDien.XANH_CHINH);
         JButton nutThoiViec = GiaoDien.nut("Cho thôi việc", GiaoDien.DO);
         JButton nutLamMoi = GiaoDien.nut("Làm mới", GiaoDien.XAM);
 
         nutXem.addActionListener(e -> xemThongTinChon());
         nutLuong.addActionListener(e -> tangLuong());
         nutThangChuc.addActionListener(e -> thangChuc());
+        nutThem.addActionListener(e -> themNhanVien());
+        nutSua.addActionListener(e -> suaHoSo());
         nutThoiViec.addActionListener(e -> thoiViec());
         nutLamMoi.addActionListener(e -> taiLai());
 
         thanhCongCu.add(nutXem);
         thanhCongCu.add(nutLuong);
         thanhCongCu.add(nutThangChuc);
+        thanhCongCu.add(nutThem);
+        thanhCongCu.add(nutSua);
         thanhCongCu.add(nutThoiViec);
         thanhCongCu.add(nutLamMoi);
 
@@ -132,7 +157,7 @@ public class GiamDocPanel extends JPanel {
         JPanel khungQuanLy = new JPanel(new BorderLayout(0, 6));
         khungQuanLy.setOpaque(false);
 
-        JLabel lblQuanLy = new JLabel("Danh sách quản lý - bấm một dòng để xem nhân viên dưới quyền");
+        JLabel lblQuanLy = new JLabel("Danh sách phòng ban - bấm một dòng để xem nhân viên");
         lblQuanLy.setFont(GiaoDien.CHU_DAM);
         lblQuanLy.setForeground(GiaoDien.XANH_DAM);
 
@@ -177,50 +202,86 @@ public class GiamDocPanel extends JPanel {
 
     private void taiLai() {
         try {
-            danhSachQuanLy.clear();
-            danhSachQuanLy.addAll(nhanVienDAO.layTatCaQuanLy());
-
+            danhSachDong.clear();
             moHinhQuanLy.setRowCount(0);
-            for (NhanVien quanLy : danhSachQuanLy) {
-                int soNhanVien = nhanVienDAO.layCapDuoi(quanLy.getMaNV()).size();
 
-                moHinhQuanLy.addRow(new Object[]{
-                        quanLy.getMaNV(),
-                        quanLy.getHoTen(),
-                        hoac(quanLy.getTenPB()),
-                        soNhanVien,
-                        hoac(quanLy.getTrangThai()),
-                        tien(quanLy)
+            List<PhongBan> tatCaPhongBan = danhMucDAO.layPhongBan();
+
+            for (PhongBan pb : tatCaPhongBan) {
+                if ("PB04".equalsIgnoreCase(pb.getMaPB())) {
+                    continue;
+                }
+
+                String maTP = nhanVienDAO.layMaTruongPhong(pb.getMaPB());
+                NhanVien quanLy = null;
+
+                List<NhanVien> dsNVPhongBan = nhanVienDAO.layTheoPhongBan(pb.getMaPB());
+                int soNV = dsNVPhongBan.size();
+
+                if (soNV == 0 && maTP == null) {
+                    continue;
+                }
+
+                if (maTP != null) {
+                    for (NhanVien nv : dsNVPhongBan) {
+                        if (nv.getMaNV().equalsIgnoreCase(maTP)) {
+                            quanLy = nv;
+                            break;
+                        }
+                    }
+                }
+
+                DongBang dong = new DongBang();
+                dong.maPB = pb.getMaPB();
+                dong.tenPB = pb.getTenPB();
+                dong.soNhanVien = soNV;
+                dong.quanLy = quanLy;
+                dong.maQL = (quanLy != null) ? quanLy.getMaNV() : null;
+                dong.tenQL = (quanLy != null) ? quanLy.getHoTen() : "(Chưa có quản lý)";
+                dong.trangThai = (quanLy != null) ? quanLy.getTrangThai() : "--";
+
+                danhSachDong.add(dong);
+
+                moHinhQuanLy.addRow(new Object[] {
+                        dong.maQL != null ? dong.maQL : "",
+                        dong.tenQL,
+                        dong.tenPB,
+                        dong.soNhanVien,
+                        dong.trangThai,
+                        quanLy != null ? tien(quanLy) : "--"
                 });
             }
 
             bangDangChon = null;
             danhSachNhanVien.clear();
             moHinhNhanVien.setRowCount(0);
-            lblTieuDeNhanVien.setText("Chọn một quản lý ở bảng trên để xem nhân viên cấp dưới.");
+            lblTieuDeNhanVien.setText("Chọn một phòng ban ở bảng trên để xem nhân viên.");
 
             lblThongBao.setForeground(GiaoDien.CHU_NHAT);
-            lblThongBao.setText("Có " + danhSachQuanLy.size() + " quản lý trong hệ thống.");
+            lblThongBao.setText("Có " + danhSachDong.size() + " phòng ban trong hệ thống.");
+
         } catch (SQLException loi) {
             lblThongBao.setForeground(GiaoDien.DO);
-            lblThongBao.setText("Không tải được danh sách quản lý.");
+            lblThongBao.setText("Không tải được danh sách phòng ban.");
             GiaoDien.loiKetNoi(this, loi);
         }
     }
 
     private void napBangNhanVien() {
-        NhanVien quanLy = quanLyDangChon();
-        if (quanLy == null) {
+        int dong = bangQuanLy.getSelectedRow();
+        if (dong < 0 || dong >= danhSachDong.size()) {
             return;
         }
 
+        DongBang dongChon = danhSachDong.get(dong);
+
         try {
             danhSachNhanVien.clear();
-            danhSachNhanVien.addAll(nhanVienDAO.layCapDuoi(quanLy.getMaNV()));
+            danhSachNhanVien.addAll(nhanVienDAO.layTheoPhongBan(dongChon.maPB));
 
             moHinhNhanVien.setRowCount(0);
             for (NhanVien nhanVien : danhSachNhanVien) {
-                moHinhNhanVien.addRow(new Object[]{
+                moHinhNhanVien.addRow(new Object[] {
                         nhanVien.getMaNV(),
                         nhanVien.getHoTen(),
                         hoac(nhanVien.getTenCV()),
@@ -229,8 +290,13 @@ public class GiamDocPanel extends JPanel {
                 });
             }
 
-            lblTieuDeNhanVien.setText("Nhân viên dưới quyền: " + quanLy.getHoTen()
-                    + " (" + quanLy.getMaNV() + ") - " + danhSachNhanVien.size() + " người");
+            String tenQL = (dongChon.quanLy != null)
+                    ? dongChon.quanLy.getHoTen()
+                    : "(Chưa có quản lý)";
+
+            lblTieuDeNhanVien.setText("Phòng " + dongChon.tenPB + " - " + tenQL
+                    + " - " + danhSachNhanVien.size() + " người");
+
         } catch (SQLException loi) {
             GiaoDien.loiKetNoi(this, loi);
         }
@@ -238,10 +304,10 @@ public class GiamDocPanel extends JPanel {
 
     private NhanVien quanLyDangChon() {
         int dong = bangQuanLy.getSelectedRow();
-        if (dong < 0 || dong >= danhSachQuanLy.size()) {
+        if (dong < 0 || dong >= danhSachDong.size()) {
             return null;
         }
-        return danhSachQuanLy.get(dong);
+        return danhSachDong.get(dong).quanLy;
     }
 
     private NhanVien nhanVienDangChon() {
@@ -253,17 +319,73 @@ public class GiamDocPanel extends JPanel {
     }
 
     private NhanVien doiTuongDangChon() {
-        if (bangDangChon == bangNhanVien) {
-            NhanVien nhanVien = nhanVienDangChon();
-            if (nhanVien != null) {
-                return nhanVien;
+        // Ưu tiên bảng dưới (nhân viên) nếu có chọn
+        if (bangNhanVien.getSelectedRow() >= 0) {
+            return nhanVienDangChon();
+        }
+        // Nếu chọn bảng trên, trả về quản lý của phòng (nếu có)
+        return quanLyDangChon();
+    }
+
+    private void themNhanVien() {
+        try {
+            if (dsPhongBan.isEmpty())
+                dsPhongBan.addAll(danhMucDAO.layPhongBan());
+            if (dsChucVu.isEmpty())
+                dsChucVu.addAll(danhMucDAO.layChucVu());
+
+            String maNVMoi = nhanVienDAO.sinhMaNhanVien();
+
+            NhanVienFormDialog dialog = new NhanVienFormDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    NhanVienFormDialog.CheDo.THEM,
+                    null,
+                    maNVMoi,
+                    this.giamDoc,
+                    dsPhongBan,
+                    dsChucVu);
+            dialog.setVisible(true);
+
+            if (dialog.isDaLuu()) {
+                taiLai();
+                lblThongBao.setForeground(GiaoDien.XANH_LA);
+                lblThongBao.setText("Đã thêm nhân viên mới.");
             }
+        } catch (SQLException loi) {
+            GiaoDien.loiKetNoi(this, loi);
         }
-        NhanVien quanLy = quanLyDangChon();
-        if (quanLy != null) {
-            return quanLy;
+    }
+
+    private void suaHoSo() {
+        NhanVien nhanVien = doiTuongDangChon();
+        if (nhanVien == null) {
+            GiaoDien.canhBao(this, "Vui lòng chọn một quản lý hoặc một nhân viên.");
+            return;
         }
-        return nhanVienDangChon();
+        try {
+            if (dsPhongBan.isEmpty())
+                dsPhongBan.addAll(danhMucDAO.layPhongBan());
+            if (dsChucVu.isEmpty())
+                dsChucVu.addAll(danhMucDAO.layChucVu());
+
+            NhanVienFormDialog dialog = new NhanVienFormDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    NhanVienFormDialog.CheDo.SUA,
+                    nhanVien,
+                    null,
+                    this.giamDoc,
+                    dsPhongBan,
+                    dsChucVu);
+            dialog.setVisible(true);
+
+            if (dialog.isDaLuu()) {
+                taiLai();
+                lblThongBao.setForeground(GiaoDien.XANH_LA);
+                lblThongBao.setText("Đã cập nhật hồ sơ cho " + nhanVien.getHoTen());
+            }
+        } catch (SQLException loi) {
+            GiaoDien.loiKetNoi(this, loi);
+        }
     }
 
     private void xemThongTinChon() {
@@ -300,7 +422,8 @@ public class GiamDocPanel extends JPanel {
         }
 
         BigDecimal luongHienTai = nhanVien.getLuong() == null
-                ? BigDecimal.ZERO : nhanVien.getLuong();
+                ? BigDecimal.ZERO
+                : nhanVien.getLuong();
         BigDecimal goiY = luongHienTai.multiply(new BigDecimal("1.10"));
 
         JTextField oLuong = GiaoDien.truong(16);
@@ -327,11 +450,9 @@ public class GiamDocPanel extends JPanel {
 
             nhanVienDAO.tangLuong(nhanVien.getMaNV(), luongMoi);
             taiLai();
-            chonLaiQuanLy(nhanVien.getMaNV());
-
             lblThongBao.setForeground(GiaoDien.XANH_LA);
-            lblThongBao.setText("Đã tăng lương cho " + nhanVien.getHoTen() + " lên "
-                    + tien(nhanVien.getMaNV()) + " đ");
+            lblThongBao.setText("Đã tăng lương cho " + nhanVien.getHoTen()
+                    + " lên " + DinhDang.tien(luongMoi) + " đ");
         } catch (NumberFormatException loi) {
             GiaoDien.canhBao(this, "Lương phải là số, ví dụ: 15000000");
         } catch (SQLException loi) {
@@ -360,6 +481,14 @@ public class GiamDocPanel extends JPanel {
 
         try {
             nhanVienDAO.thoiViec(nhanVien.getMaNV());
+
+            if ("CV01".equalsIgnoreCase(nhanVien.getMaCV())) {
+                nhanVienDAO.capNhatQuanLyChoPhongBan(
+                        nhanVien.getMaPB(),
+                        this.giamDoc.getMaNV(),
+                        nhanVien.getMaNV());
+            }
+
             taiLai();
             lblThongBao.setForeground(GiaoDien.DO);
             lblThongBao.setText("Đã cho " + nhanVien.getHoTen() + " nghỉ việc và xóa khỏi danh sách.");
@@ -380,57 +509,50 @@ public class GiamDocPanel extends JPanel {
             return;
         }
 
-        boolean dongY = GiaoDien.xacNhan(this, "Thăng chức " + nhanVien.getHoTen()
-                + " (" + nhanVien.getMaNV() + ") lên quản lý?\n\n"
-                + "Chức vụ thành \"Trưởng phòng\" và tài khoản có quyền quản lý.");
-        if (!dongY) {
-            return;
-        }
-
         try {
+            if (nhanVienDAO.phongBanDaCoTruongPhong(nhanVien.getMaPB())) {
+                GiaoDien.canhBao(this, "Phòng ban " + nhanVien.getTenPB()
+                        + " đã có Trưởng phòng. Không thể thăng chức thêm!");
+                return;
+            }
+
+            boolean dongY = GiaoDien.xacNhan(this, "Thăng chức " + nhanVien.getHoTen()
+                    + " (" + nhanVien.getMaNV() + ") lên quản lý phòng " + nhanVien.getTenPB() + "?\n\n"
+                    + "Chức vụ thành \"Trưởng phòng\" và tài khoản có quyền quản lý.\n"
+                    + "Toàn bộ nhân viên trong phòng sẽ được chuyển sang báo cáo cho người này.");
+            if (!dongY) {
+                return;
+            }
+
             nhanVienDAO.thangChuc(nhanVien.getMaNV(), NhanVienDAO.MA_CV_QUAN_LY);
+
+            nhanVienDAO.capNhatQuanLyChoPhongBan(
+                    nhanVien.getMaPB(),
+                    nhanVien.getMaNV(),
+                    nhanVien.getMaNV());
+
             taiLai();
             lblThongBao.setForeground(GiaoDien.XANH_CHINH);
-            lblThongBao.setText("Đã thăng chức " + nhanVien.getHoTen() + " thành quản lý.");
+            lblThongBao.setText("Đã thăng chức " + nhanVien.getHoTen()
+                    + " thành Trưởng phòng. Nhân viên trong phòng đã được cập nhật.");
         } catch (SQLException loi) {
             GiaoDien.loiKetNoi(this, loi);
         }
     }
 
     private boolean laQuanLy(String maNV) {
-        for (NhanVien quanLy : danhSachQuanLy) {
-            if (quanLy.getMaNV().equalsIgnoreCase(maNV)) {
+        for (DongBang dong : danhSachDong) {
+            if (dong.maQL != null && dong.maQL.equalsIgnoreCase(maNV)) {
                 return true;
             }
         }
         return false;
     }
 
-    private void chonLaiQuanLy(String maNV) {
-        for (int dong = 0; dong < moHinhQuanLy.getRowCount(); dong++) {
-            if (maNV.equalsIgnoreCase(String.valueOf(moHinhQuanLy.getValueAt(dong, 0)))) {
-                bangQuanLy.setRowSelectionInterval(dong, dong);
-                return;
-            }
-        }
-    }
-
-    private BigDecimal tienCua(String maNV) {
-        for (NhanVien quanLy : danhSachQuanLy) {
-            if (quanLy.getMaNV().equalsIgnoreCase(maNV)) {
-                return quanLy.getLuong();
-            }
-        }
-        return BigDecimal.ZERO;
-    }
-
     private String tien(NhanVien nhanVien) {
         return nhanVien.getLuong() == null || nhanVien.getLuong().signum() == 0
-                ? "--" : DinhDang.tien(nhanVien.getLuong());
-    }
-
-    private String tien(String maNV) {
-        return DinhDang.tien(tienCua(maNV));
+                ? "--"
+                : DinhDang.tien(nhanVien.getLuong());
     }
 
     private static String hoac(String giaTri) {
