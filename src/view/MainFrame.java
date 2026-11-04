@@ -41,6 +41,8 @@ public class MainFrame extends JFrame {
 
     public static final String CARD_QL_CHAM_CONG = "QL_CHAM_CONG";
 
+    public static final String CARD_GIAM_DOC = "GIAM_DOC";
+
     private static final DateTimeFormatter DINH_DANG_DONG_HO =
             DateTimeFormatter.ofPattern("HH:mm:ss - dd/MM/yyyy");
 
@@ -74,7 +76,8 @@ public class MainFrame extends JFrame {
         add(taoNoiDung(), BorderLayout.CENTER);
         add(taoThanhTrangThai(), BorderLayout.SOUTH);
 
-        hienThi(taiKhoan.isQuanLy() ? CARD_NHAN_VIEN : CARD_THONG_TIN);
+        hienThi(taiKhoan.isGiamDoc() ? CARD_GIAM_DOC
+                : (taiKhoan.isQuanLy() ? CARD_NHAN_VIEN : CARD_THONG_TIN));
         batDauDongHo();
     }
 
@@ -82,16 +85,23 @@ public class MainFrame extends JFrame {
         JMenuBar thanhMenu = new JMenuBar();
 
         JMenu mnuHeThong = new JMenu("Hệ thống");
+        JMenuItem miDoiMatKhau = new JMenuItem("Đổi mật khẩu");
+        miDoiMatKhau.addActionListener(e -> moDoiMatKhau());
         JMenuItem miDangXuat = new JMenuItem("Đăng xuất");
         miDangXuat.addActionListener(e -> dangXuat());
         JMenuItem miThoat = new JMenuItem("Thoát chương trình");
         miThoat.addActionListener(e -> System.exit(0));
+        mnuHeThong.add(miDoiMatKhau);
+        mnuHeThong.addSeparator();
         mnuHeThong.add(miDangXuat);
         mnuHeThong.addSeparator();
         mnuHeThong.add(miThoat);
 
         JMenu mnuChucNang = new JMenu("Chức năng");
         mnuChucNang.add(taoMuc("Thông tin của tôi", CARD_THONG_TIN));
+        if (taiKhoan.isGiamDoc()) {
+            mnuChucNang.add(taoMuc("Quản lý toàn công ty", CARD_GIAM_DOC));
+        }
         if (taiKhoan.isQuanLy()) {
             mnuChucNang.add(taoMuc("Nhân viên cấp dưới", CARD_NHAN_VIEN));
         }
@@ -104,9 +114,11 @@ public class MainFrame extends JFrame {
         JMenuItem miGioiThieu = new JMenuItem("Giới thiệu");
         miGioiThieu.addActionListener(e -> JOptionPane.showMessageDialog(this,
                 "Ứng dụng Quản lý Nhân sự & Chấm công (Java Swing + JDBC)\n"
-                        + "Phiên bản 1.0\n\n"
+                        + "Phiên bản 1.1\n\n"
+                        + "Giám đốc: xem mọi quản lý và nhân viên, tăng lương, thăng chức, cho thôi việc.\n"
                         + "Quản lý: xem/thêm nhân viên cấp dưới, chấm công nhân viên.\n"
-                        + "Nhân viên: xem hồ sơ của mình, tự chấm công.",
+                        + "Nhân viên: xem hồ sơ của mình, tự chấm công.\n"
+                        + "Mọi vai trò đều đổi được mật khẩu.",
                 "Giới thiệu", JOptionPane.INFORMATION_MESSAGE));
         mnuTroGiup.add(miGioiThieu);
 
@@ -172,6 +184,11 @@ public class MainFrame extends JFrame {
 
         thanhBen.add(taoNutMenu("Thông tin của tôi", CARD_THONG_TIN));
 
+        if (taiKhoan.isGiamDoc()) {
+            thanhBen.add(Box.createVerticalStrut(4));
+            thanhBen.add(taoNutMenu("Quản lý toàn công ty", CARD_GIAM_DOC));
+        }
+
         if (taiKhoan.isQuanLy()) {
             thanhBen.add(Box.createVerticalStrut(4));
             thanhBen.add(taoNutMenu("Nhân viên cấp dưới", CARD_NHAN_VIEN));
@@ -213,6 +230,9 @@ public class MainFrame extends JFrame {
         pnlNoiDung.setBackground(GiaoDien.NEN);
 
         pnlNoiDung.add(new ThongTinCaNhanPanel(taiKhoan, nhanVien), CARD_THONG_TIN);
+        if (taiKhoan.isGiamDoc()) {
+            pnlNoiDung.add(new GiamDocPanel(nhanVien), CARD_GIAM_DOC);
+        }
         if (taiKhoan.isQuanLy()) {
             pnlNoiDung.add(new NhanVienPanel(nhanVien), CARD_NHAN_VIEN);
             pnlNoiDung.add(new QuanLyChamCongPanel(nhanVien), CARD_QL_CHAM_CONG);
@@ -260,9 +280,16 @@ public class MainFrame extends JFrame {
                 return "Chấm công của tôi";
             case CARD_QL_CHAM_CONG:
                 return "Chấm công nhân viên";
+            case CARD_GIAM_DOC:
+                return "Quản lý toàn công ty";
             default:
                 return "";
         }
+    }
+
+    private void moDoiMatKhau() {
+        DoiMatKhauDialog hopThoai = new DoiMatKhauDialog(this, taiKhoan);
+        hopThoai.setVisible(true);
     }
 
     private void dangXuat() {

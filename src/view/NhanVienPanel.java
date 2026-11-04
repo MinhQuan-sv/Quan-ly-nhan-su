@@ -2,12 +2,6 @@ package view;
 
 import dao.DanhMucDAO;
 import dao.NhanVienDAO;
-import model.ChucVu;
-import model.NhanVien;
-import model.PhongBan;
-import util.DinhDang;
-import util.KetNoiCSDL;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -26,6 +20,11 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import model.ChucVu;
+import model.NhanVien;
+import model.PhongBan;
+import util.DinhDang;
+import util.KetNoiCSDL;
 
 public class NhanVienPanel extends JPanel {
     private static final long serialVersionUID = 1L;
@@ -34,7 +33,7 @@ public class NhanVienPanel extends JPanel {
 
     private static final String[] TEN_COT = {
             "Mã NV", "Họ tên", "Ngày sinh", "Giới tính", "Số điện thoại", "Email",
-            "Phòng ban", "Chức vụ", "Ngày vào làm", "Trạng thái"
+            "Phòng ban", "Chức vụ", "Ngày vào làm", "Trạng thái", "Lương"
     };
 
     private final NhanVien quanLy;
@@ -50,7 +49,7 @@ public class NhanVienPanel extends JPanel {
     private final JTable bang = GiaoDien.bang(moHinhBang);
     private final JTextField txtTimKiem = GiaoDien.truong(18);
     private final JComboBox<String> cbLocTrangThai = GiaoDien.combo(new String[]{
-            TAT_CA, NhanVien.DANG_LAM, NhanVien.TAM_NGHI, NhanVien.DA_NGHI});
+            TAT_CA, NhanVien.DANG_LAM, NhanVien.TAM_NGHI});
     private final JLabel lblDem = new JLabel();
     private final JLabel lblThongBao = new JLabel(" ");
 
@@ -210,7 +209,8 @@ public class NhanVienPanel extends JPanel {
                     hoac(nhanVien.getTenPB()),
                     hoac(nhanVien.getTenCV()),
                     DinhDang.ngay(nhanVien.getNgayVaoLam()),
-                    hoac(nhanVien.getTrangThai())
+                    hoac(nhanVien.getTrangThai()),
+                    nhanVien.getLuong() == null ? "--" : DinhDang.tien(nhanVien.getLuong())
             });
             soDongHienThi++;
         }
@@ -300,16 +300,20 @@ public class NhanVienPanel extends JPanel {
             return;
         }
 
-        boolean dongY = GiaoDien.xacNhan(this, "Chuyển nhân viên \""
+        boolean dongY = GiaoDien.xacNhan(this, "Cho nhân viên \""
                 + nhanVienChon.getHoTen() + "\" (" + nhanVienChon.getMaNV()
-                + ") sang trạng thái \"Đã nghỉ\"?");
+                + ") nghỉ việc?\n\n"
+                + "Nhân viên sẽ bị xóa khỏi danh sách và tài khoản bị khóa.");
         if (!dongY) {
             return;
         }
 
         try {
-            nhanVienDAO.doiTrangThai(nhanVienChon.getMaNV(), NhanVien.DA_NGHI);
+            nhanVienDAO.thoiViec(nhanVienChon.getMaNV());
             taiLai();
+            lblThongBao.setForeground(GiaoDien.DO);
+            lblThongBao.setText("Đã cho " + nhanVienChon.getHoTen()
+                    + " nghỉ việc và xóa khỏi danh sách.");
         } catch (SQLException loi) {
             GiaoDien.loiKetNoi(this, loi);
         }

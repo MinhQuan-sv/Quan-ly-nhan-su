@@ -66,6 +66,8 @@ CREATE TABLE NHANVIEN (
     MaQuanLy    VARCHAR(10)   NULL,
     TrangThai   NVARCHAR(20)  NOT NULL
         CONSTRAINT DF_NV_TRANGTHAI DEFAULT N'Đang làm',
+    Luong       DECIMAL(12,2) NOT NULL
+        CONSTRAINT DF_NV_LUONG DEFAULT 0,
 
     CONSTRAINT FK_NV_PHONGBAN FOREIGN KEY (MaPB) REFERENCES PHONGBAN(MaPB),
     CONSTRAINT FK_NV_CHUCVU   FOREIGN KEY (MaCV) REFERENCES CHUCVU(MaCV),
@@ -78,13 +80,13 @@ CREATE TABLE NHANVIEN (
 CREATE TABLE TAIKHOAN (
     TenDangNhap VARCHAR(50)  NOT NULL PRIMARY KEY,
     MatKhau     VARCHAR(64)  NOT NULL,           -- SHA-256 dạng hex
-    VaiTro      VARCHAR(20)  NOT NULL,           -- 'QuanLy' hoặc 'NhanVien'
+    VaiTro      VARCHAR(20)  NOT NULL,           -- 'GiamDoc', 'QuanLy' hoặc 'NhanVien'
     MaNV        VARCHAR(10)  NOT NULL UNIQUE,    -- mỗi nhân viên 1 tài khoản
     TrangThai   NVARCHAR(20) NOT NULL
         CONSTRAINT DF_TK_TRANGTHAI DEFAULT N'Hoạt động',
 
     CONSTRAINT FK_TK_NHANVIEN FOREIGN KEY (MaNV) REFERENCES NHANVIEN(MaNV),
-    CONSTRAINT CK_TK_VAI_TRO  CHECK (VaiTro IN ('QuanLy', 'NhanVien'))
+    CONSTRAINT CK_TK_VAI_TRO  CHECK (VaiTro IN ('GiamDoc', 'QuanLy', 'NhanVien'))
 );
 
 /* ------------------------------- CHẤM CÔNG ----------------------------- */
@@ -110,39 +112,54 @@ GO
 INSERT INTO PHONGBAN (MaPB, TenPB, MoTa) VALUES
     ('PB01', N'Phòng Kỹ thuật',        N'Phát triển và vận hành hệ thống phần mềm'),
     ('PB02', N'Phòng Kinh doanh',      N'Kinh doanh và chăm sóc khách hàng'),
-    ('PB03', N'Phòng Hành chính - Nhân sự', N'Quản trị nhân sự và hành chính');
+    ('PB03', N'Phòng Hành chính - Nhân sự', N'Quản trị nhân sự và hành chính'),
+    ('PB04', N'Ban Giám đốc',          N'Điều hành toàn công ty');
 
 INSERT INTO CHUCVU (MaCV, TenCV, MoTa) VALUES
     ('CV01', N'Trưởng phòng',   N'Quản lý toàn bộ nhân viên trong phòng'),
     ('CV02', N'Nhân viên',      N'Nhân viên chính thức'),
-    ('CV03', N'Thực tập sinh',  N'Nhân viên đang thực tập');
+    ('CV03', N'Thực tập sinh',  N'Nhân viên đang thực tập'),
+    ('CV04', N'Giám đốc',       N'Quản lý toàn bộ quản lý và nhân viên');
 
 INSERT INTO CALAMVIEC (MaCa, TenCa, GioBatDau, GioKetThuc) VALUES
     ('CA01', N'Ca hành chính',   '08:00', '17:00'),
     ('CA02', N'Ca chiều - tối',  '13:00', '21:00');
 
 -- NV001 là quản lý (không có cấp trên), NV002..NV005 là cấp dưới của NV001
+-- NV008..NV010 là ban giám đốc, quản lý toàn bộ quản lý và nhân viên
 INSERT INTO NHANVIEN (MaNV, HoTen, NgaySinh, GioiTinh, CCCD, SoDienThoai, Email,
-                      DiaChi, NgayVaoLam, MaPB, MaCV, MaQuanLy, TrangThai) VALUES
+                      DiaChi, NgayVaoLam, MaPB, MaCV, MaQuanLy, TrangThai, Luong) VALUES
     ('NV001', N'Trần Văn Quản',  '1985-04-12', N'Nam', '079085001111', '0901111222',
      'quan.tv@congty.vn', N'12 Lê Lợi, Quận 1, TP.HCM', '2015-03-01',
-     'PB01', 'CV01', NULL, N'Đang làm'),
+     'PB01', 'CV01', NULL, N'Đang làm', 20000000),
 
     ('NV002', N'Nguyễn Thị An',  '1998-03-12', N'Nữ',  '079098002222', '0912222333',
      'an.nv@congty.vn', N'45 Nguyễn Trãi, Quận 5, TP.HCM', '2021-05-04',
-     'PB01', 'CV02', 'NV001', N'Đang làm'),
+     'PB01', 'CV02', 'NV001', N'Đang làm', 12000000),
 
     ('NV003', N'Trần Thị Bình',  '1995-07-25', N'Nữ',  '079095003333', '0933333444',
      'binh.tt@congty.vn', N'78 Cách Mạng Tháng 8, Quận 3, TP.HCM', '2019-09-16',
-     'PB01', 'CV02', 'NV001', N'Đang làm'),
+     'PB01', 'CV02', 'NV001', N'Đang làm', 12000000),
 
     ('NV004', N'Lê Hoàng Cường', '2000-01-08', N'Nam', '079000004444', '0944444555',
      'cuong.lh@congty.vn', N'23 Điện Biên Phủ, Bình Thạnh, TP.HCM', '2023-02-01',
-     'PB01', 'CV03', 'NV001', N'Đang làm'),
+     'PB01', 'CV03', 'NV001', N'Đang làm', 6000000),
 
     ('NV005', N'Phạm Thu Dung',  '1997-11-30', N'Nữ',  '079097005555', '0955555666',
      'dung.pt@congty.vn', N'56 Trường Chinh, Tân Bình, TP.HCM', '2022-07-11',
-     'PB01', 'CV02', 'NV001', N'Tạm nghỉ');
+     'PB01', 'CV02', 'NV001', N'Tạm nghỉ', 12000000),
+
+    ('NV008', N'Nguyễn Minh Quân', '1980-02-15', N'Nam', '052206005765', '0353942865',
+     'quan.nm@congty.vn', N'Tăng Nhơn Phú, Thủ Đức, HCM', '2010-01-05',
+     'PB04', 'CV04', NULL, N'Đang làm', 30000000),
+
+    ('NV009', N'Trần Văn Nhân',  '1982-06-20', N'Nam', '052206005766', '0353942866',
+     'nhan.tv@congty.vn', N'Tăng Nhơn Phú, Thủ Đức, HCM', '2011-03-10',
+     'PB04', 'CV04', NULL, N'Đang làm', 30000000),
+
+    ('NV010', N'Đinh Viết Thiên', '1983-09-12', N'Nam', '052206005767', '0353942867',
+     'thien.dv@congty.vn', N'Dĩ An, Bình Dương', '2012-07-01',
+     'PB04', 'CV04', NULL, N'Đang làm', 30000000);
 
 -- Mật khẩu của mọi tài khoản mẫu: 123456
 DECLARE @MatKhau123456 VARCHAR(64) = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
@@ -151,7 +168,10 @@ INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, VaiTro, MaNV, TrangThai) VALUES
     ('quanly',   @MatKhau123456, 'QuanLy',   'NV001', N'Hoạt động'),
     ('an.nv',    @MatKhau123456, 'NhanVien', 'NV002', N'Hoạt động'),
     ('binh.tt',  @MatKhau123456, 'NhanVien', 'NV003', N'Hoạt động'),
-    ('cuong.lh', @MatKhau123456, 'NhanVien', 'NV004', N'Hoạt động');
+    ('cuong.lh', @MatKhau123456, 'NhanVien', 'NV004', N'Hoạt động'),
+    ('gd.quan',  @MatKhau123456, 'GiamDoc',  'NV008', N'Hoạt động'),
+    ('gd.nhan',  @MatKhau123456, 'GiamDoc',  'NV009', N'Hoạt động'),
+    ('gd.thien', @MatKhau123456, 'GiamDoc',  'NV010', N'Hoạt động');
 
 -- Vài bản ghi chấm công của những ngày trước (hôm nay để trống để thử chấm công)
 INSERT INTO CHAMCONG (MaNV, NgayChamCong, MaCa, GioVao, GioRa, TrangThai, GhiChu) VALUES

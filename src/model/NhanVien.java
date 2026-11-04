@@ -1,5 +1,6 @@
 package model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -37,6 +38,8 @@ public class NhanVien {
     private String maQuanLy;
 
     private String trangThai;
+
+    private BigDecimal luong;
 
     private String tenPB;
 
@@ -154,6 +157,14 @@ public class NhanVien {
 
     public void setTrangThai(String trangThai) {
         this.trangThai = trangThai;
+    }
+
+    public BigDecimal getLuong() {
+        return luong;
+    }
+
+    public void setLuong(BigDecimal luong) {
+        this.luong = luong;
     }
 
     public String getTenPB() {

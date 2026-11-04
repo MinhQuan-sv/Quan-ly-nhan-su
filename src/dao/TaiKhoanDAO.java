@@ -19,6 +19,12 @@ public class TaiKhoanDAO {
     private static final String SQL_DEM_THEO_TEN_DANG_NHAP =
             "SELECT COUNT(*) FROM TAIKHOAN WHERE TenDangNhap = ?";
 
+    private static final String SQL_CAP_NHAT_MAT_KHAU =
+            "UPDATE TAIKHOAN SET MatKhau = ? WHERE TenDangNhap = ?";
+
+    private static final String SQL_CAP_NHAT_VAI_TRO =
+            "UPDATE TAIKHOAN SET VaiTro = ? WHERE MaNV = ?";
+
     public TaiKhoan dangNhap(String tenDangNhap, String matKhau) throws SQLException {
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
              PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_THEO_TEN_DANG_NHAP)) {
@@ -50,6 +56,27 @@ public class TaiKhoanDAO {
                 }
                 return false;
             }
+        }
+    }
+
+    public void doiMatKhau(String tenDangNhap, String matKhauMoi) throws SQLException {
+        try (Connection ketNoi = KetNoiCSDL.ketNoi();
+             PreparedStatement lenh = ketNoi.prepareStatement(SQL_CAP_NHAT_MAT_KHAU)) {
+            lenh.setString(1, MatKhau.bam(matKhauMoi));
+            lenh.setString(2, tenDangNhap);
+
+            if (lenh.executeUpdate() == 0) {
+                throw new SQLException("Không tìm thấy tài khoản " + tenDangNhap + ".");
+            }
+        }
+    }
+
+    public void capNhatVaiTro(String maNV, String vaiTro) throws SQLException {
+        try (Connection ketNoi = KetNoiCSDL.ketNoi();
+             PreparedStatement lenh = ketNoi.prepareStatement(SQL_CAP_NHAT_VAI_TRO)) {
+            lenh.setString(1, vaiTro);
+            lenh.setString(2, maNV);
+            lenh.executeUpdate();
         }
     }
 

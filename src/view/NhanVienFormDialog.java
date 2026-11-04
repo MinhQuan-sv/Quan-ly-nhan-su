@@ -18,6 +18,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
@@ -66,6 +67,8 @@ public class NhanVienFormDialog extends JDialog {
     private final JComboBox<ChucVu> cbChucVu = new JComboBox<>();
     private final JComboBox<String> cbTrangThai = GiaoDien.combo(NhanVien.TRANG_THAI);
 
+    private final JTextField txtLuong = GiaoDien.truong(20);
+
     private final JTextField txtTenDangNhap = GiaoDien.truong(20);
     private final JTextField txtMatKhau = GiaoDien.truong(20);
     private final JTextField txtNhapLaiMatKhau = GiaoDien.truong(20);
@@ -93,6 +96,7 @@ public class NhanVienFormDialog extends JDialog {
         txtNgayVaoLam.setToolTipText("Định dạng dd/MM/yyyy");
         txtTenDangNhap.setToolTipText("Tên đăng nhập, không dấu, không khoảng trắng");
         txtMatKhau.setToolTipText("Tối thiểu 6 ký tự");
+        txtLuong.setToolTipText("Chỉ nhập số, ví dụ: 12000000");
         txtMaNV.setEditable(false);
 
         dienDuLieuBanDau(maNVMoi);
@@ -115,6 +119,7 @@ public class NhanVienFormDialog extends JDialog {
             txtTenDangNhap.setText(maNVMoi == null ? "" : maNVMoi.toLowerCase());
             txtMatKhau.setText("123456");
             txtNhapLaiMatKhau.setText("123456");
+            txtLuong.setText("12000000");
             return;
         }
 
@@ -133,6 +138,9 @@ public class NhanVienFormDialog extends JDialog {
         chonChucVu(nhanVienDangSua.getMaCV());
         if (nhanVienDangSua.getTrangThai() != null) {
             cbTrangThai.setSelectedItem(nhanVienDangSua.getTrangThai());
+        }
+        if (nhanVienDangSua.getLuong() != null) {
+            txtLuong.setText(nhanVienDangSua.getLuong().toPlainString());
         }
     }
 
@@ -187,6 +195,7 @@ public class NhanVienFormDialog extends JDialog {
         hang = themTruong(form, viTri, hang, "Phòng ban (*)", cbPhongBan);
         hang = themTruong(form, viTri, hang, "Chức vụ (*)", cbChucVu);
         hang = themTruong(form, viTri, hang, "Trạng thái", cbTrangThai);
+        hang = themTruong(form, viTri, hang, "Lương (đồng)", txtLuong);
 
         if (cheDo == CheDo.THEM) {
             viTri.gridx = 0;
@@ -265,6 +274,7 @@ public class NhanVienFormDialog extends JDialog {
             nhanVien.setDiaChi(rongThanhNull(txtDiaChi.getText()));
             nhanVien.setNgayVaoLam(DinhDang.docNgay(txtNgayVaoLam.getText()));
             nhanVien.setTrangThai((String) cbTrangThai.getSelectedItem());
+            nhanVien.setLuong(docLuong(txtLuong.getText()));
             nhanVien.setMaQuanLy(maQuanLy);
 
             PhongBan phongBan = (PhongBan) cbPhongBan.getSelectedItem();
@@ -344,6 +354,23 @@ public class NhanVienFormDialog extends JDialog {
         daLuu = true;
         GiaoDien.tin(this, "Đã cập nhật thông tin nhân viên " + nhanVien.getHoTen() + ".");
         dispose();
+    }
+
+    private static BigDecimal docLuong(String chuoi) {
+        String so = chuoi == null ? "" : chuoi.trim()
+                .replace(".", "").replace(",", "").replace(" ", "");
+        if (so.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            BigDecimal luong = new BigDecimal(so);
+            if (luong.signum() < 0) {
+                throw new IllegalArgumentException("Lương không được là số âm.");
+            }
+            return luong;
+        } catch (NumberFormatException loi) {
+            throw new IllegalArgumentException("Lương phải là số, ví dụ: 12000000");
+        }
     }
 
     private void kiemTraNgayThang(NhanVien nhanVien) {

@@ -10,10 +10,13 @@ Hỗ trợ **2 hệ CSDL**: **SQL Server** (đang cấu hình sẵn, chạy đư
 
 | Vai trò | Chức năng |
 |---|---|
-| **Quản lý** (`quanly`) | Xem **nhân viên cấp dưới**, **thêm nhân viên** (kèm tài khoản), sửa hồ sơ, cho nghỉ việc, **chấm công nhân viên** (theo ngày, chấm hộ vào/ra, xem lịch sử tháng), xem hồ sơ của mình, tự chấm công |
+| **Giám đốc** (`gd.quan`, `gd.nhan`, `gd.thien`) | Xem **toàn bộ quản lý** và **nhân viên dưới quyền từng quản lý** (bấm 1 quản lý là thấy danh sách của quản lý đó); **tăng lương** cho cả quản lý và nhân viên; **thăng chức** nhân viên lên quản lý; **cho thôi việc** (khóa tài khoản); xem hồ sơ của mình, tự chấm công |
+| **Quản lý** (`quanly`) | Xem **nhân viên cấp dưới**, **thêm nhân viên** (kèm tài khoản + lương), sửa hồ sơ, cho nghỉ việc, **chấm công nhân viên** (theo ngày, chấm hộ vào/ra, xem lịch sử tháng), xem hồ sơ của mình, tự chấm công |
 | **Nhân viên** (`an.nv`, …) | Chỉ xem **thông tin của chính mình** (chỉ đọc) và **chấm công của mình** (vào/ra, lịch sử tháng, số ngày công, số lần đi muộn) |
+| **Mọi vai trò** | **Đổi mật khẩu** (menu Hệ thống → Đổi mật khẩu) |
 
-Quan hệ cấp trên – cấp dưới dựa vào cột `NHANVIEN.MaQuanLy`.
+Quan hệ cấp trên – cấp dưới dựa vào cột `NHANVIEN.MaQuanLy`; vai trò đăng nhập nằm ở
+cột `TAIKHOAN.VaiTro` (`GiamDoc` / `QuanLy` / `NhanVien`).
 
 ---
 
@@ -22,22 +25,24 @@ Quan hệ cấp trên – cấp dưới dựa vào cột `NHANVIEN.MaQuanLy`.
 ```
 Btapnhom/
 ├── database/
-│   ├── QuanLyNhanSu.sql          Script cho SQL Server (bản đang dùng)
-│   └── mysql/QuanLyNhanSu.sql    Script cho MySQL 8.0 (utf8mb4)
-├── db.properties                 Cấu hình kết nối (đang trỏ SQL Server)
+│   ├── QuanLyNhanSu.sql          Script cho SQL Server
+│   ├── mysql/QuanLyNhanSu.sql    Script cho MySQL 8.0 (utf8mb4)
+│   └── mysql/02_giam_doc_luong.sql  Nâng cấp CSDL cũ: thêm vai trò Giám đốc + cột lương
+├── db.properties                 Cấu hình kết nối (đang trỏ MySQL)
 ├── chay.bat                      Biên dịch + chạy
 ├── src/
-│   ├── app/Main.java             Điểm khởi động
-│   ├── model/                    NhanVien, TaiKhoan, PhongBan, ChucVu, CaLamViec, ChamCong
+│   ├── Main.java                 Điểm khởi động
+│   ├── model/                    NhanVien (có Lương), TaiKhoan, PhongBan, ChucVu, CaLamViec, ChamCong
 │   ├── dao/                      TaiKhoanDAO, NhanVienDAO, ChamCongDAO, DanhMucDAO
 │   ├── service/ChamCongService   Nghiệp vụ: đi muộn, về sớm, số giờ làm, trạng thái
 │   ├── util/                     KetNoiCSDL, MatKhau (SHA-256), DinhDang
 │   └── view/                     LoginFrame, MainFrame, GiaoDien, ThongTinCaNhanPanel,
 │                                 NhanVienPanel, NhanVienFormDialog, ChamCongPanel,
-│                                 QuanLyChamCongPanel
-├── tools/                        KiemTraKetNoi, ChayScriptSQL, BamMatKhau
-├── lib/                          Driver JDBC (mssql-jdbc hiện có sẵn)
+│                                 QuanLyChamCongPanel, GiamDocPanel, DoiMatKhauDialog
+├── tools/                        KiemTraKetNoi, ChayScriptSQL, ChuyenDuLieu, BamMatKhau
+├── lib/                          Driver JDBC (MySQL + SQL Server)
 ├── LENH.md                       Danh sách lệnh cần thực hiện
+├── TAI-LIEU-HAM.md               Giải thích chức năng từng hàm
 └── README.md
 ```
 
@@ -97,38 +102,61 @@ sqlcmd -S localhost -U sa -P 123456 -C -f 65001 -i "C:\Quann\Btapnhom\database\Q
 
 ---
 
-## 4. Chuyển sang MySQL (tùy chọn)
+## 4. Chuyển sang MySQL (đang chuyển)
 
-MySQL 8.0 đang chạy trên máy (cổng 3306) nhưng chưa có driver Java và chưa biết
-mật khẩu `root`, nên cần 3 bước:
+`db.properties` **đã được đặt sẵn cho MySQL**. Còn 2 việc chỉ bạn làm được
+(driver cần tải từ Internet, mật khẩu MySQL chỉ bạn biết):
 
 **Bước 1** — tải **MySQL Connector/J** (<https://dev.mysql.com/downloads/connector/j/>),
-chép vào `lib\`:
+chép file jar vào `lib\`:
 
 ```
 Btapnhom\lib\mysql-connector-j-8.4.0.jar
 ```
 
-**Bước 2** — trong `db.properties`: bỏ `#` ở 4 dòng MySQL (cuối file), thêm `#` vào
-4 dòng SQL Server, và điền mật khẩu MySQL:
+**Bước 2** — mở `db.properties`, sửa **đúng một dòng**:
 
 ```properties
-db.driver=com.mysql.cj.jdbc.Driver
-db.url=jdbc:mysql://localhost:3306/QuanLyNhanSu?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
-db.user=root
 db.password=<mật khẩu MySQL của bạn>
 ```
 
-**Bước 3** — tạo CSDL. Cách nhanh: mở **MySQL Workbench** → kết nối `localhost:3306`
-→ `File → Open SQL Script…` → chọn `database\mysql\QuanLyNhanSu.sql` → **Execute**
-(tia chớp). Hoặc bằng dòng lệnh:
+**Bước 3** — tạo CSDL MySQL (chọn 1 trong 2 cách):
 
 ```bat
+:: Cách A - bằng dòng lệnh
 chay.bat build
 java -cp "out;lib/*" tools\ChayScriptSQL.java database/mysql/QuanLyNhanSu.sql
+```
+
+Hoặc **MySQL Workbench** → kết nối `localhost:3306` → `File → Open SQL Script…`
+→ chọn `database\mysql\QuanLyNhanSu.sql` → **Execute**.
+
+**Bước 4** — kiểm tra và chạy:
+
+```bat
 java -cp "out;lib/*" tools\KiemTraKetNoi.java
+:: phải hiện: Hệ quản trị: MySQL / KẾT NỐI CSDL: THÀNH CÔNG
 chay.bat
 ```
+
+### Chuyển dữ liệu đang có ở SQL Server sang MySQL (tùy chọn)
+
+Script MySQL ở bước 3 chỉ tạo **dữ liệu mẫu**. Nếu muốn mang theo dữ liệu thật
+(nhân viên, tài khoản, chấm công đã nhập), chạy thêm công cụ chuyển dữ liệu:
+
+```bat
+java -cp "out;lib/*" tools\ChuyenDuLieu.java
+```
+
+Công cụ sẽ: đọc toàn bộ bảng từ SQL Server → xoá dữ liệu cũ trong MySQL → ghi lại
+đúng thứ tự khoá ngoại, rồi in số dòng của từng bảng ở cả hai bên.
+(Nếu tài khoản SQL Server không phải `sa`/`123456`, truyền vào sau lệnh:
+`tools\ChuyenDuLieu.java <user> <password>`.)
+
+### Quay lại SQL Server
+
+Mở `db.properties`, bỏ `#` ở 4 dòng SQL Server (cuối file) và thêm `#` vào 4 dòng
+MySQL. Dữ liệu bên SQL Server vẫn còn nguyên.
 
 ---
 
@@ -136,14 +164,17 @@ chay.bat
 
 | Tên đăng nhập | Vai trò | Nhân viên |
 |---|---|---|
+| `gd.quan` | Giám đốc | NV008 - Nguyễn Minh Quân (Ban Giám đốc) |
+| `gd.nhan` | Giám đốc | NV009 - Trần Văn Nhân (Ban Giám đốc) |
+| `gd.thien` | Giám đốc | NV010 - Đinh Viết Thiên (Ban Giám đốc) |
 | `quanly` | Quản lý | NV001 - Trần Văn Quản (Trưởng phòng Kỹ thuật) |
 | `an.nv` | Nhân viên | NV002 - Nguyễn Thị An |
 | `binh.tt` | Nhân viên | NV003 - Trần Thị Bình |
 | `cuong.lh` | Nhân viên | NV004 - Lê Hoàng Cường |
 
 Mật khẩu lưu dạng **SHA-256** (`8d969eef…adc6c92`), so khớp bằng `util.MatKhau.khop()`.
-Đặt lại mật khẩu: `java -cp out tools\BamMatKhau.java <mật-khẩu-mới>` rồi chạy câu
-`UPDATE TAIKHOAN SET MatKhau = '…'` mà công cụ in ra.
+Người dùng đổi mật khẩu ngay trong app: **Hệ thống → Đổi mật khẩu**.
+Nếu quên, dùng `tools\BamMatKhau.java` để tạo mã băm mới rồi `UPDATE TAIKHOAN SET MatKhau = '…'`.
 
 ---
 
@@ -180,8 +211,9 @@ Mỗi nhân viên chỉ có 1 bản ghi/ngày; dung sai `ChamCongService.PHUT_DU
 
 | File | Công dụng | Lệnh |
 |---|---|---|
-| `KiemTraKetNoi.java` | kiểm tra kết nối theo `db.properties` | `java -cp "out;lib/*" tools\KiemTraKetNoi.java` |
-| `ChayScriptSQL.java` | nạp file .sql qua JDBC (đọc UTF-8; hỗ trợ cả `GO` và `;`) | `java -cp "out;lib/*" tools\ChayScriptSQL.java database\QuanLyNhanSu.sql` |
+| `KiemTraKetNoi.java` | kiểm tra kết nối theo `db.properties` (in cả hệ quản trị đang dùng) | `java -cp "out;lib/*" tools\KiemTraKetNoi.java` |
+| `ChayScriptSQL.java` | nạp file .sql qua JDBC (đọc UTF-8; hỗ trợ cả `GO` và `;`) | `java -cp "out;lib/*" tools\ChayScriptSQL.java database\mysql\QuanLyNhanSu.sql` |
+| `ChuyenDuLieu.java` | chép toàn bộ dữ liệu SQL Server → MySQL | `java -cp "out;lib/*" tools\ChuyenDuLieu.java` |
 | `BamMatKhau.java` | băm mật khẩu để đặt lại | `java -cp out tools\BamMatKhau.java 123456` |
 
 ---
@@ -194,89 +226,104 @@ Mỗi nhân viên chỉ có 1 bản ghi/ngày; dung sai `ChamCongService.PHUT_DU
 
 ---
 
+
 ## 11. Nếu bạn NHẬN folder này từ người khác
 
-Folder đã có sẵn: mã nguồn (`src`), driver SQL Server (`lib\mssql-jdbc-...jar`),
-script CSDL (`database\`), file cấu hình (`db.properties`), bản biên dịch (`out`).
+Folder đã có sẵn mọi thứ: mã nguồn (`src`), **cả 2 driver JDBC** trong `lib`
+(`mysql-connector-j-26.10.0.jar` và `mssql-jdbc-12.8.1.jre11.jar`), script CSDL
+(`database/`), `db.properties`, `chay.bat`, tài liệu (`README.md`, `LENH.md`,
+`CLEANCODE.md`, `TAI-LIEU-HAM.md`).
 
-### 11.1. Cần cài gì trên máy mới
+Mặc định dự án dùng **MySQL 8.0**. Người nhận chỉ phải: cài JDK + MySQL, khai báo
+mật khẩu MySQL, tạo CSDL.
+
+### 11.1. Cần có trên máy
 
 | Thứ cần | Kiểm tra bằng | Ghi chú |
 |---|---|---|
-| **JDK 8 trở lên** (hoặc JRE 8+ nếu không sửa code) | `java -version`, `javac -version` | Không có `javac` thì vẫn chạy được bản đã biên dịch trong `out\` |
-| **Một hệ CSDL**: SQL Server hoặc MySQL 8 | `sc query MSSQLSERVER` / `sc query MySQL80` | Xem 11.2 hoặc 11.3 |
-| (không cần mạng) | | Driver SQL Server đã có sẵn trong `lib\` |
+| **JDK 22 trở lên** (khuyến nghị) | `java -version` | JDK 8–21 vẫn chạy được nhưng phải biên dịch trước bằng `javac` |
+| **MySQL 8.0 đang chạy** | `sc query MySQL80` và `netstat -ano \| findstr :3306` | |
+| Internet | không cần | Driver JDBC đã nằm trong `lib\` |
 
-> Chương trình **bắt buộc** phải có CSDL để chạy, vì toàn bộ dữ liệu (nhân viên,
-> tài khoản, chấm công) nằm trong CSDL chứ không lưu trong code.
+> Chương trình **bắt buộc** phải có CSDL, vì dữ liệu nằm trong CSDL chứ không trong code.
 
-### 11.2. Cách A — dùng SQL Server (dễ nhất vì driver đã kèm sẵn)
+### 11.2. Các lệnh cần chạy (đúng thứ tự)
 
-1. Cài **SQL Server Express/Developer** (nếu chưa có).
-2. Bật kết nối TCP và đăng nhập SQL:
-   - `SQLServerManager16.msc` → `Protocols for MSSQLSERVER` → **TCP/IP = Enabled**;
-     `IP Addresses` → `IPAll`: `TCP Port = 1433`, `TCP Dynamic Ports` = trống;
-     `SQL Server Services` → **Restart**.
-   - SSMS → chuột phải instance → `Properties` → `Security` → chọn
-     **SQL Server and Windows Authentication mode** → OK → restart dịch vụ.
-   - Trong SSMS (đang nối bằng Windows Authentication) chạy:
-     ```sql
-     ALTER LOGIN sa ENABLE;
-     ALTER LOGIN sa WITH PASSWORD = '123456', CHECK_POLICY = OFF;
-     ```
-3. Nạp CSDL (đường dẫn tuyệt đối cho chắc, **bắt buộc `-f 65001`**):
-   ```bat
-   sqlcmd -S localhost -U sa -P 123456 -C -f 65001 -i "C:\...\Btapnhom\database\QuanLyNhanSu.sql"
-   ```
-4. Kiểm tra kết nối rồi chạy:
-   ```bat
-   cd /d <thư mục đã giải nén>
-   java -cp "out;lib/*" tools\KiemTraKetNoi.java     :: phải in THÀNH CÔNG
-   chay.bat
-   ```
-5. Đăng nhập: `quanly` / `123456` hoặc `an.nv` / `123456`.
+```bat
+:: 1) giải nén, vào thư mục dự án
+cd /d <thư mục đã giải nén>
 
-Nếu mật khẩu `sa` của máy mới khác, sửa `db.password` trong `db.properties` cho khớp.
+:: 2) khai báo mật khẩu MySQL — sửa đúng 1 dòng rồi lưu (Ctrl+S)
+notepad db.properties
+::     db.user=root
+::     db.password=<mật khẩu MySQL của máy này>
 
-### 11.3. Cách B — dùng MySQL 8
+:: 3) biên dịch (cần cho các công cụ trong tools\)
+chay.bat build
 
-1. Cài **MySQL 8.0** (hoặc XAMPP).
-2. Tải **MySQL Connector/J** (`mysql-connector-j-*.jar`) ở
-   <https://dev.mysql.com/downloads/connector/j/> rồi chép vào `lib\`.
-3. Trong `db.properties`: bỏ dấu `#` ở 4 dòng MySQL (cuối file), thêm `#` vào 4 dòng
-   SQL Server, rồi điền `db.user` / `db.password` của MySQL.
-4. Nạp CSDL: MySQL Workbench → `File → Open SQL Script…` →
-   `database\mysql\QuanLyNhanSu.sql` → **Execute**. Hoặc:
-   ```bat
-   chay.bat build
-   java -cp "out;lib/*" tools\ChayScriptSQL.java database\mysql\QuanLyNhanSu.sql
-   ```
-5. Chạy `chay.bat` như trên.
+:: 4) tạo CSDL + dữ liệu mẫu
+java -cp "out;lib/*" tools\ChayScriptSQL.java database/mysql/QuanLyNhanSu.sql
 
-### 11.4. Checklist nhanh cho người nhận
+:: 5) kiểm tra kết nối — phải in "Hệ quản trị: MySQL" và "THÀNH CÔNG"
+java -cp "out;lib/*" tools\KiemTraKetNoi.java
 
-- [ ] `java -version` chạy được
-- [ ] `db.properties` có đúng `db.url`, `db.user`, `db.password` của máy mình
-- [ ] Đã nạp script CSDL (có database `QuanLyNhanSu`)
-- [ ] `java -cp "out;lib/*" tools\KiemTraKetNoi.java` in `KẾT NỐI CSDL   : THÀNH CÔNG`
-- [ ] `chay.bat` mở được màn hình đăng nhập và đăng nhập được
+:: 6) chạy chương trình
+java src\Main.java
+```
 
-### 11.5. Lỗi thường gặp khi chạy trên máy mới
+Bước 4 có thể làm bằng **MySQL Workbench** thay cho dòng lệnh:
+kết nối `localhost:3306` → `File → Open SQL Script…` → chọn
+`database\mysql\QuanLyNhanSu.sql` → bấm **Execute** (tia chớp).
+
+### 11.3. Đăng nhập
+
+| Tên đăng nhập | Mật khẩu | Vai trò |
+|---|---|---|
+| `quanly` | `123456` | Quản lý |
+| `an.nv`, `binh.tt`, `cuong.lh` | `123456` | Nhân viên |
+
+### 11.4. Nếu máy người nhận dùng SQL Server thay vì MySQL
+
+```bat
+:: 1) sửa db.properties: bỏ # ở 4 dòng SQL Server (cuối file), thêm # vào 4 dòng MySQL
+notepad db.properties
+
+:: 2) nạp script SQL Server — BẮT BUỘC có -f 65001 để tiếng Việt không lỗi dấu
+sqlcmd -S localhost -U sa -P <mật-khẩu-sa> -C -f 65001 -i "database\QuanLyNhanSu.sql"
+
+:: 3) chạy lại
+java src\Main.java
+```
+
+### 11.5. Lỗi thường gặp trên máy mới
 
 | Hiện tượng | Cách xử lý |
 |---|---|
-| `Chưa nạp được driver JDBC` | Thiếu file jar trong `lib\`, hoặc chạy sai classpath (phải `-cp "out;lib/*"`) |
-| `TCP/IP connection to the host ... has failed` | Chưa bật TCP/IP cho SQL Server (bước 11.2.2) |
-| `Login failed for user 'sa'` | Chưa bật Mixed Mode hoặc sai mật khẩu `sa` |
-| `Cannot open database "QuanLyNhanSu"` | Chưa nạp script CSDL |
-| App báo **“Tài khoản đã bị khóa”** | CSDL bị nạp script sai encoding (thiếu `-f 65001`) → nạp lại bằng lệnh ở 11.2.3 |
-| Chữ tiếng Việt trong app bị lỗi dấu | Chạy trên Windows có font Segoe UI; nếu vẫn lỗi, kiểm tra console đang dùng mã UTF-8 |
+| `Chưa nạp được driver JDBC` | Chạy sai thư mục (phải đứng ở thư mục dự án có `lib\`), hoặc `lib` không có jar |
+| `Access denied for user 'root'@'localhost'` | Chưa sửa `db.password` trong `db.properties` (hoặc sai mật khẩu MySQL) |
+| `Unknown database 'QuanLyNhanSu'` | Chưa chạy bước 4 (tạo CSDL) |
+| `Communications link failure` | MySQL chưa chạy: `net start MySQL80`, kiểm tra `netstat -ano \| findstr :3306` |
+| Mở app nhưng chữ trong bảng bị mất dấu | Lỗi của bộ gõ tiếng Việt (UniKey/EVKey), không phải lỗi app — xem mục 12 |
+| `Cannot find file main` / `Không tìm thấy Main` | Phải gõ `java src\Main.java` (có đuôi `.java`) và đứng ở thư mục dự án |
 
 ### 11.6. Trước khi nén gửi đi
 
-- Có thể xóa thư mục `out\` cho gọn (người nhận chạy `chay.bat` sẽ tự biên dịch lại).
-- **Đừng** gửi file `QuanliNhansu.sql` ở thư mục gốc (đây là file cũ, không dùng).
-- Cần gửi đủ: `src\`, `lib\` (có file jar), `database\`, `db.properties`, `chay.bat`,
-  `README.md`, `LENH.md`, `CLEANCODE.md` (và `tools\` nếu muốn dùng công cụ kiểm tra).
-- Không cần gửi: `out\` (bản biên dịch) — nhưng gửi cũng không sao, người nhận chạy được ngay.
+- Nên xoá `out\` cho gọn (người nhận chạy `chay.bat build` sẽ tạo lại).
+- **Che mật khẩu**: nếu gửi cho nhiều người, đổi `db.password` trong `db.properties`
+  về lại `MAT_KHAU_MYSQL_CUA_BAN` trước khi nén (người nhận tự điền mật khẩu máy họ).
+- Cần gửi đủ: `src\`, `lib\` (2 file jar), `database\`, `tools\`, `db.properties`,
+  `chay.bat`, các file `.md`.
 
+---
+
+## 12. Lỗi gõ tiếng Việt trong app (không phải lỗi chương trình)
+
+Java Swing nhận chữ tiếng Việt qua bộ gõ UniKey/EVKey, **không** nhận tốt bộ gõ
+Telex tích hợp của Windows. Nếu gõ chữ không dấu được mà gõ dấu thì mất dấu:
+
+1. Mở **UniKey** (`C:\Program Files\UniKey\UniKeyNT.exe`), bấm biểu tượng ở khay
+   hệ thống để chuyển sang **V** (Vietnamese).
+2. Chuột phải biểu tượng UniKey → **Bảng mã: Unicode**, **Kiểu gõ: Telex**.
+3. Chuyển bàn phím Windows sang **ENG** (`Win + Space`) để tránh xung đột.
+
+CSDL MySQL đã tạo với `utf8mb4` nên khi nhập đúng, tiếng Việt lưu và hiển thị đúng.

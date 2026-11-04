@@ -7,6 +7,8 @@ public class TaiKhoan {
 
     public static final String NHAN_VIEN = "NhanVien";
 
+    public static final String GIAM_DOC = "GiamDoc";
+
     public static final String HOAT_DONG = "Hoạt động";
 
     public static final String BI_KHOA = "Bị khóa";
@@ -86,11 +88,18 @@ public class TaiKhoan {
         return QUAN_LY.equalsIgnoreCase(vaiTro);
     }
 
+    public boolean isGiamDoc() {
+        return GIAM_DOC.equalsIgnoreCase(vaiTro);
+    }
+
     public boolean isHoatDong() {
         return HOAT_DONG.equalsIgnoreCase(trangThai);
     }
 
     public String getTenVaiTro() {
+        if (isGiamDoc()) {
+            return "Giám đốc";
+        }
         return isQuanLy() ? "Quản lý" : "Nhân viên";
     }
 

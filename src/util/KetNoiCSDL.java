@@ -15,9 +15,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class KetNoiCSDL {
     private static final String TEN_FILE_CAU_HINH = "db.properties";
+
+    private static final String MAT_KHAU_MAU = "MAT_KHAU_MYSQL_CUA_BAN";
 
     private static final String[] THU_MUC_CHUA_DRIVER = {"lib", "../lib"};
 
@@ -77,6 +81,24 @@ public final class KetNoiCSDL {
             return "SQLServer";
         }
         return "Khác";
+    }
+
+    public static String tenDatabase() throws SQLException {
+        docCauHinhNeuCan();
+        Matcher timSqlServer = Pattern.compile("(?i)databaseName=([^;]+)").matcher(url);
+        if (timSqlServer.find()) {
+            return timSqlServer.group(1);
+        }
+        Matcher timMySql = Pattern.compile("jdbc:mysql://[^/]+/([^?]+)").matcher(url);
+        if (timMySql.find()) {
+            return timMySql.group(1);
+        }
+        return "(không có trong db.url)";
+    }
+
+    public static String tenTaiKhoan() throws SQLException {
+        docCauHinhNeuCan();
+        return taiKhoan.isEmpty() ? "(Windows Authentication)" : taiKhoan;
     }
 
     private static Connection moKetNoi(String urlDung) throws SQLException {
@@ -218,8 +240,19 @@ public final class KetNoiCSDL {
                     .append("- Xem lại db.url trong db.properties.\n");
         } else if (thongDiep.contains("Access denied for user")
                 || thongDiep.contains("Login failed for user")) {
-            ketQua.append("NGUYÊN NHÂN: sai tài khoản hoặc mật khẩu CSDL.\n\n")
-                    .append("Cách sửa: sửa db.user / db.password trong db.properties cho đúng.\n");
+            if (MAT_KHAU_MAU.equals(matKhau)) {
+                ketQua.append("NGUYÊN NHÂN: bạn CHƯA thay mật khẩu mẫu trong db.properties.\n\n")
+                        .append("Cách sửa: mở db.properties, đổi dòng\n")
+                        .append("   db.password=").append(MAT_KHAU_MAU).append('\n')
+                        .append("thành mật khẩu MySQL thật, ví dụ:\n")
+                        .append("   db.password=123456\n")
+                        .append("Lưu file (Ctrl+S) rồi chạy lại.\n");
+            } else {
+                ketQua.append("NGUYÊN NHÂN: sai tài khoản hoặc mật khẩu CSDL.\n\n")
+                        .append("Cách sửa: sửa db.user / db.password trong db.properties cho đúng.\n")
+                        .append("Nếu không nhớ mật khẩu MySQL, đặt lại bằng lệnh:\n")
+                        .append("   ALTER USER 'root'@'localhost' IDENTIFIED BY '123456';\n");
+            }
         } else if (thongDiep.contains("Cannot open database")
                 || thongDiep.contains("Unknown database")) {
             ketQua.append("NGUYÊN NHÂN: CSDL chưa được tạo.\n\n")

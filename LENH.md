@@ -118,23 +118,42 @@ Chép câu `UPDATE TAIKHOAN SET MatKhau = '…' WHERE MaNV = '…';` in ra rồi
 rmdir /s /q out
 ```
 
+## 10. Nâng cấp CSDL đã có dữ liệu (thêm Giám đốc + cột lương)
+
+Chỉ dùng khi đã có CSDL `QuanLyNhanSu` và muốn thêm vai trò Giám đốc mà không tạo
+lại CSDL (chạy **một lần**):
+
+```bat
+java -cp "out;lib/*" tools\ChayScriptSQL.java database\mysql\02_giam_doc_luong.sql
+```
+
+Tạo CSDL mới thì bỏ qua bước này — `database\mysql\QuanLyNhanSu.sql` đã có sẵn
+3 giám đốc, cột lương và vai trò `GiamDoc`.
+
 ---
 
-## Phụ lục A — Chuyển sang MySQL (3 bước)
+## Phụ lục A — Chuyển sang MySQL
 
-1. Tải MySQL Connector/J → `lib\mysql-connector-j-8.4.0.jar`
-2. Trong `db.properties`: bỏ `#` ở 4 dòng MySQL (cuối file), thêm `#` vào 4 dòng SQL Server,
-   điền `db.password=<mật khẩu MySQL>`
-3. Tạo CSDL: mở **MySQL Workbench** → `File → Open SQL Script…` → chọn
-   `database\mysql\QuanLyNhanSu.sql` → **Execute**.
-   Hoặc:
+`db.properties` đã đặt sẵn cho MySQL; chỉ còn 2 việc:
+
+1. Tải MySQL Connector/J → chép vào `lib\mysql-connector-j-8.4.0.jar`
+2. Sửa **một dòng** trong `db.properties`: `db.password=<mật khẩu MySQL>`
+
+Rồi chạy theo thứ tự:
 
 ```bat
 chay.bat build
+java -cp "out;lib/*" tools\KiemTraKetNoi.java          :: phải hiện Hệ quản trị: MySQL
 java -cp "out;lib/*" tools\ChayScriptSQL.java database/mysql/QuanLyNhanSu.sql
-java -cp "out;lib/*" tools\KiemTraKetNoi.java
-chay.bat
+
+:: (tùy chọn) mang dữ liệu thật từ SQL Server sang MySQL
+java -cp "out;lib/*" tools\ChuyenDuLieu.java
+
+java "src\Main.java"                                    :: hoặc: java src\Main.java
 ```
+
+Quay lại SQL Server: bỏ `#` ở 4 dòng SQL Server cuối `db.properties`, thêm `#` vào
+4 dòng MySQL.
 
 ## Phụ lục B — Bật TCP/IP + Mixed Mode cho SQL Server (nếu cài lại máy)
 
@@ -153,3 +172,35 @@ net stop MSSQLSERVER
 net start MSSQLSERVER
 sqlcmd -S localhost -E -C -Q "ALTER LOGIN sa ENABLE; ALTER LOGIN sa WITH PASSWORD = '123456', CHECK_POLICY = OFF;"
 ```
+
+---
+
+## Phụ lục C — Nếu bạn NHẬN folder này từ người khác
+
+Mặc định dự án dùng **MySQL**. Driver JDBC đã có sẵn trong `lib\`, không cần tải.
+
+```bat
+:: 1) vào thư mục dự án
+cd /d <thư mục đã giải nén>
+
+:: 2) điền mật khẩu MySQL vào db.properties (sửa 1 dòng: db.password=...)
+notepad db.properties
+
+:: 3) biên dịch
+chay.bat build
+
+:: 4) tạo CSDL + dữ liệu mẫu
+java -cp "out;lib/*" tools\ChayScriptSQL.java database/mysql/QuanLyNhanSu.sql
+
+:: 5) kiểm tra kết nối (phải THÀNH CÔNG)
+java -cp "out;lib/*" tools\KiemTraKetNoi.java
+
+:: 6) chạy
+java src\Main.java
+```
+
+Đăng nhập: `quanly` / `123456` hoặc `an.nv` / `123456`.
+
+Nếu máy dùng SQL Server thay vì MySQL: bỏ `#` ở 4 dòng SQL Server cuối
+`db.properties`, thêm `#` vào 4 dòng MySQL, rồi nạp script
+`database\QuanLyNhanSu.sql` bằng `sqlcmd ... -f 65001`.
