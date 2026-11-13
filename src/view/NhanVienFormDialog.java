@@ -1,15 +1,8 @@
 package view;
 
+import dao.DanhMucDAO;
 import dao.NhanVienDAO;
 import dao.TaiKhoanDAO;
-import dao.DanhMucDAO;
-import model.ChucVu;
-import model.NhanVien;
-import model.PhongBan;
-import model.TaiKhoan;
-import util.DinhDang;
-import util.KetNoiCSDL;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -32,6 +25,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import java.text.*;
+import javax.swing.text.*;
+import model.ChucVu;
+import model.NhanVien;
+import model.PhongBan;
+import model.TaiKhoan;
+import util.DinhDang;
+import util.KetNoiCSDL;
 
 public class NhanVienFormDialog extends JDialog {
     private static final long serialVersionUID = 1L;
@@ -99,6 +100,7 @@ public class NhanVienFormDialog extends JDialog {
         txtTenDangNhap.setToolTipText("Tên đăng nhập, không dấu, không khoảng trắng");
         txtMatKhau.setToolTipText("Tối thiểu 6 ký tự");
         txtLuong.setToolTipText("Chỉ nhập số, ví dụ: 12000000");
+        ((AbstractDocument) txtLuong.getDocument()).setDocumentFilter(new NumberDocumentFilter());
         txtMaNV.setEditable(false);
 
         cbPhongBan.addActionListener(e -> {
@@ -125,7 +127,7 @@ public class NhanVienFormDialog extends JDialog {
             txtTenDangNhap.setText(maNVMoi == null ? "" : maNVMoi.toLowerCase());
             txtMatKhau.setText("123456");
             txtNhapLaiMatKhau.setText("123456");
-            txtLuong.setText("12000000");
+            txtLuong.setText("");
             return;
         }
 
@@ -160,7 +162,8 @@ public class NhanVienFormDialog extends JDialog {
                 cbTrangThai.setSelectedItem(nhanVienDangSua.getTrangThai());
             }
             if (nhanVienDangSua.getLuong() != null) {
-                txtLuong.setText(nhanVienDangSua.getLuong().toPlainString());
+                DecimalFormat dinhDangLuong = new DecimalFormat("#,###");
+                txtLuong.setText(dinhDangLuong.format(nhanVienDangSua.getLuong()));
             }
         } finally {
             // Gắn lại listener
@@ -212,14 +215,14 @@ public class NhanVienFormDialog extends JDialog {
         hang = themTruong(form, viTri, hang, "Ngày sinh", txtNgaySinh);
         hang = themTruong(form, viTri, hang, "Giới tính", cbGioiTinh);
         hang = themTruong(form, viTri, hang, "CCCD", txtCccd);
-        hang = themTruong(form, viTri, hang, "Số điện thoại", txtSoDienThoai);
-        hang = themTruong(form, viTri, hang, "Email", txtEmail);
+        hang = themTruong(form, viTri, hang, "Số điện thoại (*)", txtSoDienThoai);
+        hang = themTruong(form, viTri, hang, "Email (*)", txtEmail);
         hang = themTruong(form, viTri, hang, "Địa chỉ", txtDiaChi);
         hang = themTruong(form, viTri, hang, "Ngày vào làm", txtNgayVaoLam);
         hang = themTruong(form, viTri, hang, "Phòng ban (*)", cbPhongBan);
         hang = themTruong(form, viTri, hang, "Chức vụ (*)", cbChucVu);
         hang = themTruong(form, viTri, hang, "Trạng thái", cbTrangThai);
-        hang = themTruong(form, viTri, hang, "Lương (đồng)", txtLuong);
+        hang = themTruong(form, viTri, hang, "Lương (đồng) (*)", txtLuong);
 
         if (cheDo == CheDo.THEM) {
             viTri.gridx = 0;
@@ -303,7 +306,7 @@ public class NhanVienFormDialog extends JDialog {
 
             cbChucVu.removeAllItems();
             for (ChucVu chucVu : dsChucVu) {
-                if ("CV04".equalsIgnoreCase(chucVu.getMaCV()))
+                if ("CV00".equalsIgnoreCase(chucVu.getMaCV()))
                     continue;
                 if (daCoTruongPhong
                         && "CV01".equalsIgnoreCase(chucVu.getMaCV())
@@ -343,8 +346,9 @@ public class NhanVienFormDialog extends JDialog {
             nhanVien.setNgaySinh(DinhDang.docNgay(txtNgaySinh.getText()));
             nhanVien.setGioiTinh((String) cbGioiTinh.getSelectedItem());
             nhanVien.setCccd(kiemTraCccd(txtCccd.getText()));
-            nhanVien.setSoDienThoai(kiemTraDienThoai(txtSoDienThoai.getText()));
-            nhanVien.setEmail(kiemTraEmail(txtEmail.getText()));
+            boolean laThemMoi = (cheDo == CheDo.THEM);
+            nhanVien.setSoDienThoai(kiemTraDienThoai(txtSoDienThoai.getText(), laThemMoi));
+            nhanVien.setEmail(kiemTraEmail(txtEmail.getText(), laThemMoi));
             nhanVien.setDiaChi(rongThanhNull(txtDiaChi.getText()));
             nhanVien.setNgayVaoLam(DinhDang.docNgay(txtNgayVaoLam.getText()));
             nhanVien.setTrangThai((String) cbTrangThai.getSelectedItem());
@@ -363,7 +367,7 @@ public class NhanVienFormDialog extends JDialog {
             try {
                 String maNguoiQuanLyMacDinh = nguoiDangDangNhap.getMaNV();
 
-                if ("CV04".equalsIgnoreCase(chucVu.getMaCV())) {
+                if ("CV00".equalsIgnoreCase(chucVu.getMaCV())) {
                     // Nếu chức vụ là Giám đốc -> Không có người quản lý
                     nhanVien.setMaQuanLy(null);
                 } else if ("CV01".equalsIgnoreCase(chucVu.getMaCV())) {
@@ -472,12 +476,18 @@ public class NhanVienFormDialog extends JDialog {
     }
 
     private static BigDecimal docLuong(String chuoi) {
-        String so = chuoi == null ? ""
-                : chuoi.trim()
-                        .replace(".", "").replace(",", "").replace(" ", "");
-        if (so.isEmpty()) {
-            return BigDecimal.ZERO;
+        if (chuoi == null || chuoi.trim().isEmpty()) {
+            throw new IllegalArgumentException("Lương không được để trống.");
         }
+
+        // xóa dấu phẩy
+        String so = chuoi.trim().replace(",", "");
+
+        // xóa dấu chấm
+        if (so.indexOf('.') != so.lastIndexOf('.')) {
+            so = so.replace(".", "");
+        }
+
         try {
             BigDecimal luong = new BigDecimal(so);
             if (luong.signum() < 0) {
@@ -522,9 +532,12 @@ public class NhanVienFormDialog extends JDialog {
         return giaTriSach;
     }
 
-    private static String kiemTraDienThoai(String giaTri) {
+    private static String kiemTraDienThoai(String giaTri, boolean batBuoc) {
         String giaTriSach = rongThanhNull(giaTri);
         if (giaTriSach == null) {
+            if (batBuoc) {
+                throw new IllegalArgumentException("Số điện thoại không được để trống.");
+            }
             return null;
         }
         if (!giaTriSach.matches("\\d{9,11}")) {
@@ -533,9 +546,12 @@ public class NhanVienFormDialog extends JDialog {
         return giaTriSach;
     }
 
-    private static String kiemTraEmail(String giaTri) {
+    private static String kiemTraEmail(String giaTri, boolean batBuoc) {
         String giaTriSach = rongThanhNull(giaTri);
         if (giaTriSach == null) {
+            if (batBuoc) {
+                throw new IllegalArgumentException("Email không được để trống.");
+            }
             return null;
         }
         if (!giaTriSach.matches(MAU_EMAIL)) {
@@ -562,5 +578,29 @@ public class NhanVienFormDialog extends JDialog {
                     + "hoặc tên đăng nhập).";
         }
         return KetNoiCSDL.moTaLoi(loi);
+    }
+
+    // CLASS DÙNG ĐỂ CHẶN NHẬP CHỮ VÀO Ô LƯƠNG
+    private static class NumberDocumentFilter extends DocumentFilter {
+        @Override
+        public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                throws BadLocationException {
+            if (string == null)
+                return;
+            // Chỉ cho phép nhập số (0-9) và dấu chấm, dấu phẩy
+            if (string.matches("[0-9.,]+")) {
+                super.insertString(fb, offset, string, attr);
+            }
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                throws BadLocationException {
+            if (text == null)
+                return;
+            if (text.matches("[0-9.,]+")) {
+                super.replace(fb, offset, length, text, attrs);
+            }
+        }
     }
 }

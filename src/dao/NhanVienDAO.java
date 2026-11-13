@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import model.NhanVien;
+import model.TaiKhoan;
 import util.KetNoiCSDL;
 import util.MatKhau;
 
@@ -218,6 +219,7 @@ public class NhanVienDAO {
     public void capNhat(NhanVien nhanVien) throws SQLException {
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
                 PreparedStatement lenh = ketNoi.prepareStatement(SQL_CAP_NHAT)) {
+            // cập nhật bảng nhân viên
             lenh.setString(1, nhanVien.getHoTen());
             ganNgay(lenh, 2, nhanVien.getNgaySinh());
             lenh.setString(3, nhanVien.getGioiTinh());
@@ -233,6 +235,23 @@ public class NhanVienDAO {
             lenh.setString(13, nhanVien.getMaNV());
 
             lenh.executeUpdate();
+
+            // cập nhật vai trò trong bảng tài khoản
+            String vaiTroMoi = TaiKhoan.NHAN_VIEN; // Mặc định là nhân viên
+            if ("CV01".equals(nhanVien.getMaCV())) {
+                vaiTroMoi = TaiKhoan.QUAN_LY;
+            } else if ("CV00".equals(nhanVien.getMaCV())) {
+                vaiTroMoi = TaiKhoan.GIAM_DOC;
+            }
+            String sqlCapNhatQuyen = "UPDATE TAIKHOAN SET VaiTro = ? WHERE TenDangNhap = ?";
+
+            try (PreparedStatement lenhQuyen = ketNoi.prepareStatement(sqlCapNhatQuyen)) {
+                lenhQuyen.setString(1, vaiTroMoi);
+                // Tên đăng nhập thường được lấy bằng mã nhân viên viết thường
+                lenhQuyen.setString(2, nhanVien.getMaNV().toLowerCase());
+
+                lenhQuyen.executeUpdate();
+            }
         }
     }
 

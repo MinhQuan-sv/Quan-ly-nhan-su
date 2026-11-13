@@ -116,10 +116,9 @@ INSERT INTO PHONGBAN (MaPB, TenPB, MoTa) VALUES
     ('PB04', N'Ban Giám đốc',          N'Điều hành toàn công ty');
 
 INSERT INTO CHUCVU (MaCV, TenCV, MoTa) VALUES
+    ('CV00', N'Giám đốc',       N'Quản lý toàn bộ quản lý và nhân viên'),
     ('CV01', N'Trưởng phòng',   N'Quản lý toàn bộ nhân viên trong phòng'),
-    ('CV02', N'Nhân viên',      N'Nhân viên chính thức'),
-    ('CV03', N'Thực tập sinh',  N'Nhân viên đang thực tập'),
-    ('CV04', N'Giám đốc',       N'Quản lý toàn bộ quản lý và nhân viên');
+    ('CV02', N'Nhân viên',      N'Nhân viên chính thức');
 
 INSERT INTO CALAMVIEC (MaCa, TenCa, GioBatDau, GioKetThuc) VALUES
     ('CA01', N'Ca hành chính',   '08:00', '17:00'),
@@ -143,7 +142,7 @@ INSERT INTO NHANVIEN (MaNV, HoTen, NgaySinh, GioiTinh, CCCD, SoDienThoai, Email,
 
     ('NV004', N'Lê Hoàng Cường', '2000-01-08', N'Nam', '079000004444', '0944444555',
      'cuong.lh@congty.vn', N'23 Điện Biên Phủ, Bình Thạnh, TP.HCM', '2023-02-01',
-     'PB01', 'CV03', 'NV001', N'Đang làm', 6000000),
+     'PB01', 'CV02', 'NV001', N'Đang làm', 6000000),
 
     ('NV005', N'Phạm Thu Dung',  '1997-11-30', N'Nữ',  '079097005555', '0955555666',
      'dung.pt@congty.vn', N'56 Trường Chinh, Tân Bình, TP.HCM', '2022-07-11',
@@ -151,15 +150,15 @@ INSERT INTO NHANVIEN (MaNV, HoTen, NgaySinh, GioiTinh, CCCD, SoDienThoai, Email,
 
     ('NV008', N'Nguyễn Minh Quân', '1980-02-15', N'Nam', '052206005765', '0353942865',
      'quan.nm@congty.vn', N'Tăng Nhơn Phú, Thủ Đức, HCM', '2010-01-05',
-     'PB04', 'CV04', NULL, N'Đang làm', 30000000),
+     'PB04', 'CV00', NULL, N'Đang làm', 30000000),
 
     ('NV009', N'Trần Văn Nhân',  '1982-06-20', N'Nam', '052206005766', '0353942866',
      'nhan.tv@congty.vn', N'Tăng Nhơn Phú, Thủ Đức, HCM', '2011-03-10',
-     'PB04', 'CV04', NULL, N'Đang làm', 30000000),
+     'PB04', 'CV00', NULL, N'Đang làm', 30000000),
 
     ('NV010', N'Đinh Viết Thiên', '1983-09-12', N'Nam', '052206005767', '0353942867',
      'thien.dv@congty.vn', N'Dĩ An, Bình Dương', '2012-07-01',
-     'PB04', 'CV04', NULL, N'Đang làm', 30000000);
+     'PB04', 'CV00', NULL, N'Đang làm', 30000000);
 
 -- Mật khẩu của mọi tài khoản mẫu: 123456
 DECLARE @MatKhau123456 VARCHAR(64) = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
