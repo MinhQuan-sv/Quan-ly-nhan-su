@@ -14,6 +14,3 @@ QuanliNhansu.sql
 
 # File cau hinh that (co mat khau) - chi dung tren may, khong dua len Git
 db.properties
-
-# File backup du lieu xuat bang mysqldump (nop kem / luu rieng, khong dua len Git)
-database/backup_*.sql
