@@ -50,6 +50,12 @@ Btapnhom/
 
 ## 3. Chạy ngay (SQL Server đã cấu hình sẵn)
 
+> **Nếu chưa có `db.properties`** (file này không đưa lên Git để tránh lộ mật khẩu):
+> ```bat
+> copy db.properties.example db.properties
+> ```
+> rồi mở `db.properties` thay `MAT_KHAU_CUA_BAN` bằng mật khẩu MySQL của bạn.
+
 Máy đã có: JDK, SQL Server (TCP 1433 + Mixed Mode đã bật), driver
 `lib\mssql-jdbc-12.8.1.jre11.jar`, CSDL `QuanLyNhanSu` với dữ liệu mẫu.
 
