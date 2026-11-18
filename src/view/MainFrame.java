@@ -1,8 +1,17 @@
 package view;
 
-import model.NhanVien;
-import model.TaiKhoan;
-
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -17,18 +26,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import model.NhanVien;
+import model.TaiKhoan;
 
 public class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
@@ -42,6 +41,8 @@ public class MainFrame extends JFrame {
     public static final String CARD_QL_CHAM_CONG = "QL_CHAM_CONG";
 
     public static final String CARD_GIAM_DOC = "GIAM_DOC";
+
+    public static final String CARD_BANG_LUONG = "BANG_LUONG";
 
     private static final DateTimeFormatter DINH_DANG_DONG_HO =
             DateTimeFormatter.ofPattern("HH:mm:ss - dd/MM/yyyy");
@@ -109,6 +110,9 @@ public class MainFrame extends JFrame {
         if (taiKhoan.isQuanLy()) {
             mnuChucNang.add(taoMuc("Chấm công nhân viên", CARD_QL_CHAM_CONG));
         }
+
+        mnuChucNang.addSeparator();
+        mnuChucNang.add(taoMuc("Bảng lương", CARD_BANG_LUONG));
 
         JMenu mnuTroGiup = new JMenu("Trợ giúp");
         JMenuItem miGioiThieu = new JMenuItem("Giới thiệu");
@@ -181,7 +185,7 @@ public class MainFrame extends JFrame {
         thanhBen.setBackground(GiaoDien.XANH_DAM);
         thanhBen.setBorder(new EmptyBorder(12, 8, 12, 8));
         thanhBen.setPreferredSize(new Dimension(220, 0));
-
+        
         thanhBen.add(taoNutMenu("Thông tin của tôi", CARD_THONG_TIN));
 
         if (taiKhoan.isGiamDoc()) {
@@ -201,7 +205,10 @@ public class MainFrame extends JFrame {
             thanhBen.add(Box.createVerticalStrut(4));
             thanhBen.add(taoNutMenu("Chấm công nhân viên", CARD_QL_CHAM_CONG));
         }
-
+        
+        thanhBen.add(Box.createVerticalStrut(4));
+        thanhBen.add(taoNutMenu("Bảng lương", CARD_BANG_LUONG));
+        
         thanhBen.add(Box.createVerticalGlue());
         return thanhBen;
     }
@@ -228,7 +235,7 @@ public class MainFrame extends JFrame {
 
     private JPanel taoNoiDung() {
         pnlNoiDung.setBackground(GiaoDien.NEN);
-
+        pnlNoiDung.add(new BangLuongPanel(taiKhoan, nhanVien), CARD_BANG_LUONG);
         pnlNoiDung.add(new ThongTinCaNhanPanel(taiKhoan, nhanVien), CARD_THONG_TIN);
         if (taiKhoan.isGiamDoc()) {
             pnlNoiDung.add(new GiamDocPanel(nhanVien), CARD_GIAM_DOC);
@@ -282,6 +289,8 @@ public class MainFrame extends JFrame {
                 return "Chấm công nhân viên";
             case CARD_GIAM_DOC:
                 return "Quản lý toàn công ty";
+            case CARD_BANG_LUONG:
+            return "Bảng lương";
             default:
                 return "";
         }

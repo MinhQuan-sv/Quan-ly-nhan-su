@@ -128,6 +128,33 @@ public class NhanVienDAO {
             return ketQua;
         }
 
+    private static final String SQL_LAY_TAT_CA_DANG_LAM =
+            "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
+            + "       nv.Email, nv.DiaChi, nv.NgayVaoLam, nv.MaPB, nv.MaCV, nv.MaQuanLy, "
+            + "       nv.TrangThai, nv.Luong, pb.TenPB, cv.TenCV, ql.HoTen AS TenQuanLy "
+            + "FROM NHANVIEN nv "
+            + "LEFT JOIN PHONGBAN pb ON pb.MaPB = nv.MaPB "
+            + "LEFT JOIN CHUCVU   cv ON cv.MaCV = nv.MaCV "
+            + "LEFT JOIN NHANVIEN ql ON ql.MaNV = nv.MaQuanLy "
+            + "WHERE nv.TrangThai = ? "
+            + "ORDER BY nv.MaNV";
+
+    public List<NhanVien> layTatCaDangLam() throws SQLException {
+        List<NhanVien> ketQua = new ArrayList<>();
+
+        try (Connection ketNoi = KetNoiCSDL.ketNoi();
+            PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_TAT_CA_DANG_LAM)) {
+            lenh.setString(1, NhanVien.DANG_LAM);
+
+            try (ResultSet duLieu = lenh.executeQuery()) {
+                while (duLieu.next()) {
+                    ketQua.add(docNhanVien(duLieu));
+                }
+            }
+        }
+        return ketQua;
+    }
+    
     public List<NhanVien> timCapDuoi(String maQuanLy, String tuKhoa) throws SQLException {
             List<NhanVien> ketQua = new ArrayList<>();
 
@@ -317,7 +344,6 @@ public class NhanVienDAO {
             }
         }
     }
-
     public void thangChuc(String maNV, String maCVQuanLy) throws SQLException {
         try (Connection ketNoi = KetNoiCSDL.ketNoi()) {
             boolean cheDoBanDau = ketNoi.getAutoCommit();
