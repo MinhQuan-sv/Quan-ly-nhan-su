@@ -1,0 +1,24 @@
+# =====================================================================
+# MẪU cấu hình kết nối CSDL - Ứng dụng Quản lý Nhân sự & Chấm công
+#
+# CÁCH DÙNG (chỉ làm 1 lần):
+#     copy db.properties.example db.properties
+#   rồi mở db.properties, thay MAT_KHAU_CUA_BAN bằng mật khẩu MySQL của bạn.
+#
+# File db.properties (bản thật) đã được .gitignore bỏ qua, nên mật khẩu
+# không bị đưa lên Git.
+# =====================================================================
+
+# ---------------------- MySQL 8.0 (mặc định) ----------------------
+db.driver=com.mysql.cj.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/QuanLyNhanSu?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+db.user=root
+db.password=123456
+
+# ---------------------- SQL Server (tùy chọn) ----------------------
+# Dùng SQL Server thì bỏ dấu # ở 4 dòng dưới và thêm # vào 4 dòng MySQL trên.
+#
+#db.driver=com.mysql.cj.jdbc.Driver
+#db.url=jdbc:mysql://localhost:3306/QuanLyNhanSu?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+#db.user=root
+#db.password=123456

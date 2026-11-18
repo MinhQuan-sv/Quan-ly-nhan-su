@@ -1,14 +1,8 @@
 package view;
 
+import dao.DanhMucDAO;
 import dao.NhanVienDAO;
 import dao.TaiKhoanDAO;
-import model.ChucVu;
-import model.NhanVien;
-import model.PhongBan;
-import model.TaiKhoan;
-import util.DinhDang;
-import util.KetNoiCSDL;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -31,6 +25,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import java.text.*;
+import javax.swing.text.*;
+import model.ChucVu;
+import model.NhanVien;
+import model.PhongBan;
+import model.TaiKhoan;
+import util.DinhDang;
+import util.KetNoiCSDL;
 
 public class NhanVienFormDialog extends JDialog {
     private static final long serialVersionUID = 1L;
@@ -50,14 +52,16 @@ public class NhanVienFormDialog extends JDialog {
 
     private final NhanVien nhanVienDangSua;
 
-    private final String maQuanLy;
+    private final NhanVien nguoiDangDangNhap;
+
+    private final DanhMucDAO danhMucDAO = new DanhMucDAO();
 
     private boolean daLuu = false;
 
     private final JTextField txtMaNV = GiaoDien.truong(20);
     private final JTextField txtHoTen = GiaoDien.truong(20);
     private final JTextField txtNgaySinh = GiaoDien.truong(20);
-    private final JComboBox<String> cbGioiTinh = GiaoDien.combo(new String[]{"Nam", "Nữ", "Khác"});
+    private final JComboBox<String> cbGioiTinh = GiaoDien.combo(new String[] { "Nam", "Nữ", "Khác" });
     private final JTextField txtCccd = GiaoDien.truong(20);
     private final JTextField txtSoDienThoai = GiaoDien.truong(20);
     private final JTextField txtEmail = GiaoDien.truong(20);
@@ -76,20 +80,19 @@ public class NhanVienFormDialog extends JDialog {
     private final JLabel lblLoi = new JLabel(" ");
 
     public NhanVienFormDialog(Window cha, CheDo cheDo, NhanVien nhanVienDangSua,
-                              String maNVMoi, String maQuanLy,
-                              List<PhongBan> dsPhongBan, List<ChucVu> dsChucVu) {
+            String maNVMoi, NhanVien nguoiDangDangNhap,
+            List<PhongBan> dsPhongBan, List<ChucVu> dsChucVu) {
         super(cha, cheDo == CheDo.THEM ? "Thêm nhân viên" : "Cập nhật nhân viên",
                 ModalityType.APPLICATION_MODAL);
 
         this.cheDo = cheDo;
         this.nhanVienDangSua = nhanVienDangSua;
-        this.maQuanLy = maQuanLy;
+        this.nguoiDangDangNhap = nguoiDangDangNhap;
 
         for (PhongBan phongBan : dsPhongBan) {
-            cbPhongBan.addItem(phongBan);
-        }
-        for (ChucVu chucVu : dsChucVu) {
-            cbChucVu.addItem(chucVu);
+            if (!"PB04".equalsIgnoreCase(phongBan.getMaPB())) {
+                cbPhongBan.addItem(phongBan);
+            }
         }
 
         txtNgaySinh.setToolTipText("Định dạng dd/MM/yyyy");
@@ -97,7 +100,12 @@ public class NhanVienFormDialog extends JDialog {
         txtTenDangNhap.setToolTipText("Tên đăng nhập, không dấu, không khoảng trắng");
         txtMatKhau.setToolTipText("Tối thiểu 6 ký tự");
         txtLuong.setToolTipText("Chỉ nhập số, ví dụ: 12000000");
+        ((AbstractDocument) txtLuong.getDocument()).setDocumentFilter(new NumberDocumentFilter());
         txtMaNV.setEditable(false);
+
+        cbPhongBan.addActionListener(e -> {
+            capNhatChucVuTheoPhongBan();
+        });
 
         dienDuLieuBanDau(maNVMoi);
 
@@ -119,28 +127,47 @@ public class NhanVienFormDialog extends JDialog {
             txtTenDangNhap.setText(maNVMoi == null ? "" : maNVMoi.toLowerCase());
             txtMatKhau.setText("123456");
             txtNhapLaiMatKhau.setText("123456");
-            txtLuong.setText("12000000");
+            txtLuong.setText("");
             return;
         }
 
-        txtMaNV.setText(nhanVienDangSua.getMaNV());
-        txtHoTen.setText(nhanVienDangSua.getHoTen());
-        txtNgaySinh.setText(DinhDang.ngay(nhanVienDangSua.getNgaySinh()));
-        if (nhanVienDangSua.getGioiTinh() != null) {
-            cbGioiTinh.setSelectedItem(nhanVienDangSua.getGioiTinh());
-        }
-        txtCccd.setText(nhanVienDangSua.getCccd());
-        txtSoDienThoai.setText(nhanVienDangSua.getSoDienThoai());
-        txtEmail.setText(nhanVienDangSua.getEmail());
-        txtDiaChi.setText(nhanVienDangSua.getDiaChi());
-        txtNgayVaoLam.setText(DinhDang.ngay(nhanVienDangSua.getNgayVaoLam()));
-        chonPhongBan(nhanVienDangSua.getMaPB());
-        chonChucVu(nhanVienDangSua.getMaCV());
-        if (nhanVienDangSua.getTrangThai() != null) {
-            cbTrangThai.setSelectedItem(nhanVienDangSua.getTrangThai());
-        }
-        if (nhanVienDangSua.getLuong() != null) {
-            txtLuong.setText(nhanVienDangSua.getLuong().toPlainString());
+        // Tạm gỡ listener để tránh bị reset ComboBox khi setSelectedItem
+        java.awt.event.ActionListener[] listeners = cbPhongBan.getActionListeners();
+        for (var l : listeners)
+            cbPhongBan.removeActionListener(l);
+
+        try {
+            txtMaNV.setText(nhanVienDangSua.getMaNV());
+            txtHoTen.setText(nhanVienDangSua.getHoTen());
+            txtNgaySinh.setText(DinhDang.ngay(nhanVienDangSua.getNgaySinh()));
+            if (nhanVienDangSua.getGioiTinh() != null) {
+                cbGioiTinh.setSelectedItem(nhanVienDangSua.getGioiTinh());
+            }
+            txtCccd.setText(nhanVienDangSua.getCccd());
+            txtSoDienThoai.setText(nhanVienDangSua.getSoDienThoai());
+            txtEmail.setText(nhanVienDangSua.getEmail());
+            txtDiaChi.setText(nhanVienDangSua.getDiaChi());
+            txtNgayVaoLam.setText(DinhDang.ngay(nhanVienDangSua.getNgayVaoLam()));
+
+            // 1. Chọn phòng ban (không kích hoạt listener)
+            chonPhongBan(nhanVienDangSua.getMaPB());
+
+            // 2. Load lại ComboBox Chức vụ dựa trên phòng ban hiện tại
+            capNhatChucVuTheoPhongBan();
+
+            // 3. Giờ mới chọn chức vụ cũ (ComboBox đã có item)
+            chonChucVu(nhanVienDangSua.getMaCV());
+
+            if (nhanVienDangSua.getTrangThai() != null) {
+                cbTrangThai.setSelectedItem(nhanVienDangSua.getTrangThai());
+            }
+            if (nhanVienDangSua.getLuong() != null) {
+                DecimalFormat dinhDangLuong = new DecimalFormat("#,###");
+                txtLuong.setText(dinhDangLuong.format(nhanVienDangSua.getLuong()));
+            }
+        } finally {
+            // Gắn lại listener
+            cbPhongBan.addActionListener(e -> capNhatChucVuTheoPhongBan());
         }
     }
 
@@ -188,14 +215,14 @@ public class NhanVienFormDialog extends JDialog {
         hang = themTruong(form, viTri, hang, "Ngày sinh", txtNgaySinh);
         hang = themTruong(form, viTri, hang, "Giới tính", cbGioiTinh);
         hang = themTruong(form, viTri, hang, "CCCD", txtCccd);
-        hang = themTruong(form, viTri, hang, "Số điện thoại", txtSoDienThoai);
-        hang = themTruong(form, viTri, hang, "Email", txtEmail);
+        hang = themTruong(form, viTri, hang, "Số điện thoại (*)", txtSoDienThoai);
+        hang = themTruong(form, viTri, hang, "Email (*)", txtEmail);
         hang = themTruong(form, viTri, hang, "Địa chỉ", txtDiaChi);
         hang = themTruong(form, viTri, hang, "Ngày vào làm", txtNgayVaoLam);
         hang = themTruong(form, viTri, hang, "Phòng ban (*)", cbPhongBan);
         hang = themTruong(form, viTri, hang, "Chức vụ (*)", cbChucVu);
         hang = themTruong(form, viTri, hang, "Trạng thái", cbTrangThai);
-        hang = themTruong(form, viTri, hang, "Lương (đồng)", txtLuong);
+        hang = themTruong(form, viTri, hang, "Lương (đồng) (*)", txtLuong);
 
         if (cheDo == CheDo.THEM) {
             viTri.gridx = 0;
@@ -243,7 +270,7 @@ public class NhanVienFormDialog extends JDialog {
     }
 
     private int themTruong(JPanel panel, GridBagConstraints viTri, int hang,
-                           String nhan, JComponent truong) {
+            String nhan, JComponent truong) {
         viTri.gridx = 0;
         viTri.gridy = hang;
         viTri.gridwidth = 1;
@@ -255,6 +282,56 @@ public class NhanVienFormDialog extends JDialog {
         panel.add(truong, viTri);
 
         return hang + 1;
+    }
+
+    private void capNhatChucVuTheoPhongBan() {
+        PhongBan phongBan = (PhongBan) cbPhongBan.getSelectedItem();
+        if (phongBan == null)
+            return;
+
+        ChucVu chucVuDangChon = (ChucVu) cbChucVu.getSelectedItem();
+        String maCVDangChon = chucVuDangChon != null ? chucVuDangChon.getMaCV() : null;
+
+        try {
+            // Tự load danh sách chức vụ từ DB (không cần biến dsChucVu)
+            List<ChucVu> dsChucVu = danhMucDAO.layChucVu();
+
+            boolean daCoTruongPhong = nhanVienDAO.phongBanDaCoTruongPhong(phongBan.getMaPB());
+
+            boolean dangSuaTruongPhongCu = (cheDo == CheDo.SUA
+                    && nhanVienDangSua != null
+                    && "CV01".equalsIgnoreCase(nhanVienDangSua.getMaCV())
+                    && nhanVienDangSua.getMaPB() != null
+                    && nhanVienDangSua.getMaPB().equalsIgnoreCase(phongBan.getMaPB()));
+
+            cbChucVu.removeAllItems();
+            for (ChucVu chucVu : dsChucVu) {
+                if ("CV00".equalsIgnoreCase(chucVu.getMaCV()))
+                    continue;
+                if (daCoTruongPhong
+                        && "CV01".equalsIgnoreCase(chucVu.getMaCV())
+                        && !dangSuaTruongPhongCu) {
+                    continue;
+                }
+                cbChucVu.addItem(chucVu);
+            }
+
+            // Khôi phục lựa chọn cũ
+            if (maCVDangChon != null) {
+                for (int i = 0; i < cbChucVu.getItemCount(); i++) {
+                    if (maCVDangChon.equalsIgnoreCase(cbChucVu.getItemAt(i).getMaCV())) {
+                        cbChucVu.setSelectedIndex(i);
+                        return;
+                    }
+                }
+            }
+            if (cbChucVu.getItemCount() > 0) {
+                cbChucVu.setSelectedIndex(0);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            lblLoi.setText("Không tải được danh sách chức vụ: " + e.getMessage());
+        }
     }
 
     private void luu() {
@@ -269,13 +346,13 @@ public class NhanVienFormDialog extends JDialog {
             nhanVien.setNgaySinh(DinhDang.docNgay(txtNgaySinh.getText()));
             nhanVien.setGioiTinh((String) cbGioiTinh.getSelectedItem());
             nhanVien.setCccd(kiemTraCccd(txtCccd.getText()));
-            nhanVien.setSoDienThoai(kiemTraDienThoai(txtSoDienThoai.getText()));
-            nhanVien.setEmail(kiemTraEmail(txtEmail.getText()));
+            boolean laThemMoi = (cheDo == CheDo.THEM);
+            nhanVien.setSoDienThoai(kiemTraDienThoai(txtSoDienThoai.getText(), laThemMoi));
+            nhanVien.setEmail(kiemTraEmail(txtEmail.getText(), laThemMoi));
             nhanVien.setDiaChi(rongThanhNull(txtDiaChi.getText()));
             nhanVien.setNgayVaoLam(DinhDang.docNgay(txtNgayVaoLam.getText()));
             nhanVien.setTrangThai((String) cbTrangThai.getSelectedItem());
             nhanVien.setLuong(docLuong(txtLuong.getText()));
-            nhanVien.setMaQuanLy(maQuanLy);
 
             PhongBan phongBan = (PhongBan) cbPhongBan.getSelectedItem();
             ChucVu chucVu = (ChucVu) cbChucVu.getSelectedItem();
@@ -285,6 +362,32 @@ public class NhanVienFormDialog extends JDialog {
             }
             nhanVien.setMaPB(phongBan.getMaPB());
             nhanVien.setMaCV(chucVu.getMaCV());
+
+            // Tự động gán quản lý dựa trên người đang đăng nhập
+            try {
+                String maNguoiQuanLyMacDinh = nguoiDangDangNhap.getMaNV();
+
+                if ("CV00".equalsIgnoreCase(chucVu.getMaCV())) {
+                    // Nếu chức vụ là Giám đốc -> Không có người quản lý
+                    nhanVien.setMaQuanLy(null);
+                } else if ("CV01".equalsIgnoreCase(chucVu.getMaCV())) {
+                    // Nếu là Trưởng phòng -> Báo cáo trực tiếp cho người đang đăng nhập (thường là
+                    // GĐ)
+                    nhanVien.setMaQuanLy(maNguoiQuanLyMacDinh);
+                } else {
+                    // Nếu là nhân viên thường -> Tìm Trưởng phòng của phòng ban
+                    String maTP = nhanVienDAO.layMaTruongPhong(phongBan.getMaPB());
+                    if (maTP != null) {
+                        nhanVien.setMaQuanLy(maTP);
+                    } else {
+                        // Phòng chưa có Trưởng phòng -> Báo cáo cho người đang đăng nhập (GĐ hoặc QL)
+                        nhanVien.setMaQuanLy(maNguoiQuanLyMacDinh);
+                    }
+                }
+            } catch (SQLException e) {
+                lblLoi.setText("Lỗi khi tìm người quản lý: " + e.getMessage());
+                return;
+            }
 
             kiemTraNgayThang(nhanVien);
         } catch (IllegalArgumentException loiDuLieu) {
@@ -349,7 +452,23 @@ public class NhanVienFormDialog extends JDialog {
             return;
         }
 
+        String maCVCu = nhanVienDangSua.getMaCV();
+        String maPBCu = nhanVienDangSua.getMaPB();
+
         nhanVienDAO.capNhat(nhanVien);
+
+        if ("CV01".equalsIgnoreCase(maCVCu) && !"CV01".equalsIgnoreCase(nhanVien.getMaCV())) {
+            nhanVienDAO.capNhatQuanLyChoPhongBan(
+                    maPBCu,
+                    nguoiDangDangNhap.getMaNV(),
+                    nhanVien.getMaNV());
+        } else if ("CV01".equalsIgnoreCase(nhanVien.getMaCV()) && !"CV01".equalsIgnoreCase(maCVCu)) {
+            // Người này MỚI ĐƯỢC THĂNG CHỨC thành Trưởng phòng
+            nhanVienDAO.capNhatQuanLyChoPhongBan(
+                    nhanVien.getMaPB(),
+                    nhanVien.getMaNV(),
+                    nhanVien.getMaNV());
+        }
 
         daLuu = true;
         GiaoDien.tin(this, "Đã cập nhật thông tin nhân viên " + nhanVien.getHoTen() + ".");
@@ -357,11 +476,18 @@ public class NhanVienFormDialog extends JDialog {
     }
 
     private static BigDecimal docLuong(String chuoi) {
-        String so = chuoi == null ? "" : chuoi.trim()
-                .replace(".", "").replace(",", "").replace(" ", "");
-        if (so.isEmpty()) {
-            return BigDecimal.ZERO;
+        if (chuoi == null || chuoi.trim().isEmpty()) {
+            throw new IllegalArgumentException("Lương không được để trống.");
         }
+
+        // xóa dấu phẩy
+        String so = chuoi.trim().replace(",", "");
+
+        // xóa dấu chấm
+        if (so.indexOf('.') != so.lastIndexOf('.')) {
+            so = so.replace(".", "");
+        }
+
         try {
             BigDecimal luong = new BigDecimal(so);
             if (luong.signum() < 0) {
@@ -406,9 +532,12 @@ public class NhanVienFormDialog extends JDialog {
         return giaTriSach;
     }
 
-    private static String kiemTraDienThoai(String giaTri) {
+    private static String kiemTraDienThoai(String giaTri, boolean batBuoc) {
         String giaTriSach = rongThanhNull(giaTri);
         if (giaTriSach == null) {
+            if (batBuoc) {
+                throw new IllegalArgumentException("Số điện thoại không được để trống.");
+            }
             return null;
         }
         if (!giaTriSach.matches("\\d{9,11}")) {
@@ -417,9 +546,12 @@ public class NhanVienFormDialog extends JDialog {
         return giaTriSach;
     }
 
-    private static String kiemTraEmail(String giaTri) {
+    private static String kiemTraEmail(String giaTri, boolean batBuoc) {
         String giaTriSach = rongThanhNull(giaTri);
         if (giaTriSach == null) {
+            if (batBuoc) {
+                throw new IllegalArgumentException("Email không được để trống.");
+            }
             return null;
         }
         if (!giaTriSach.matches(MAU_EMAIL)) {
@@ -446,5 +578,29 @@ public class NhanVienFormDialog extends JDialog {
                     + "hoặc tên đăng nhập).";
         }
         return KetNoiCSDL.moTaLoi(loi);
+    }
+
+    // CLASS DÙNG ĐỂ CHẶN NHẬP CHỮ VÀO Ô LƯƠNG
+    private static class NumberDocumentFilter extends DocumentFilter {
+        @Override
+        public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                throws BadLocationException {
+            if (string == null)
+                return;
+            // Chỉ cho phép nhập số (0-9) và dấu chấm, dấu phẩy
+            if (string.matches("[0-9.,]+")) {
+                super.insertString(fb, offset, string, attr);
+            }
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                throws BadLocationException {
+            if (text == null)
+                return;
+            if (text.matches("[0-9.,]+")) {
+                super.replace(fb, offset, length, text, attrs);
+            }
+        }
     }
 }

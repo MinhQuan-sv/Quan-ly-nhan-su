@@ -48,8 +48,8 @@ public class NhanVienPanel extends JPanel {
     private final DefaultTableModel moHinhBang = GiaoDien.moHinhBang(TEN_COT);
     private final JTable bang = GiaoDien.bang(moHinhBang);
     private final JTextField txtTimKiem = GiaoDien.truong(18);
-    private final JComboBox<String> cbLocTrangThai = GiaoDien.combo(new String[]{
-            TAT_CA, NhanVien.DANG_LAM, NhanVien.TAM_NGHI});
+    private final JComboBox<String> cbLocTrangThai = GiaoDien.combo(new String[] {
+            TAT_CA, NhanVien.DANG_LAM, NhanVien.TAM_NGHI });
     private final JLabel lblDem = new JLabel();
     private final JLabel lblThongBao = new JLabel(" ");
 
@@ -184,7 +184,8 @@ public class NhanVienPanel extends JPanel {
 
     private void napBang() {
         String tuKhoa = txtTimKiem.getText() == null
-                ? "" : txtTimKiem.getText().trim().toLowerCase(Locale.forLanguageTag("vi-VN"));
+                ? ""
+                : txtTimKiem.getText().trim().toLowerCase(Locale.forLanguageTag("vi-VN"));
         String trangThaiLoc = (String) cbLocTrangThai.getSelectedItem();
 
         moHinhBang.setRowCount(0);
@@ -199,7 +200,7 @@ public class NhanVienPanel extends JPanel {
                 continue;
             }
 
-            moHinhBang.addRow(new Object[]{
+            moHinhBang.addRow(new Object[] {
                     nhanVien.getMaNV(),
                     nhanVien.getHoTen(),
                     DinhDang.ngay(nhanVien.getNgaySinh()),
@@ -251,7 +252,7 @@ public class NhanVienPanel extends JPanel {
                     NhanVienFormDialog.CheDo.THEM,
                     null,
                     maNVMoi,
-                    quanLy.getMaNV(),
+                    this.quanLy,
                     danhSachPhongBan,
                     danhSachChucVu);
 
@@ -277,7 +278,7 @@ public class NhanVienPanel extends JPanel {
                 NhanVienFormDialog.CheDo.SUA,
                 nhanVienChon,
                 null,
-                quanLy.getMaNV(),
+                this.quanLy,
                 danhSachPhongBan,
                 danhSachChucVu);
 

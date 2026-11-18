@@ -1,5 +1,5 @@
 -- =====================================================================
--- ĐỒ ÁN: QUẢN LÝ NHÂN SỰ & CHẤM CÔNG (Dành cho MySQL / MariaDB)
+-- ĐỒ ÁN: QUẢN LÝ NHÂN SỰ & CHẤM CÔNG 
 -- =====================================================================
 
 DROP DATABASE IF EXISTS QuanLyNhanSu;
@@ -91,8 +91,7 @@ INSERT INTO PHONGBAN (MaPB, TenPB, MoTa) VALUES
 INSERT INTO CHUCVU (MaCV, TenCV, MoTa) VALUES
     ('CV01', 'Trưởng phòng',   'Quản lý toàn bộ nhân viên trong phòng'),
     ('CV02', 'Nhân viên',      'Nhân viên chính thức'),
-    ('CV03', 'Thực tập sinh',  'Nhân viên đang thực tập'),
-    ('CV04', 'Giám đốc',       'Quản lý toàn bộ quản lý và nhân viên');
+    ('CV00', 'Giám đốc',       'Quản lý toàn bộ quản lý và nhân viên');
 
 INSERT INTO CALAMVIEC (MaCa, TenCa, GioBatDau, GioKetThuc) VALUES
     ('CA01', 'Ca hành chính',   '08:00:00', '17:00:00'),
@@ -114,7 +113,7 @@ INSERT INTO NHANVIEN (MaNV, HoTen, NgaySinh, GioiTinh, CCCD, SoDienThoai, Email,
 
     ('NV004', 'Lê Hoàng Cường', '2000-01-08', 'Nam', '079000004444', '0944444555',
      'cuong.lh@congty.vn', '23 Điện Biên Phủ, Bình Thạnh, TP.HCM', '2023-02-01',
-     'PB01', 'CV03', 'NV001', 'Đang làm', 6000000),
+     'PB01', 'CV02', 'NV001', 'Đang làm', 6000000),
 
     ('NV005', 'Phạm Thu Dung',  '1997-11-30', 'Nữ',  '079097005555', '0955555666',
      'dung.pt@congty.vn', '56 Trường Chinh, Tân Bình, TP.HCM', '2022-07-11',
@@ -122,15 +121,15 @@ INSERT INTO NHANVIEN (MaNV, HoTen, NgaySinh, GioiTinh, CCCD, SoDienThoai, Email,
 
     ('NV008', 'Nguyễn Minh Quân', '1980-02-15', 'Nam', '052206005765', '0353942865',
      'quan.nm@congty.vn', 'Tăng Nhơn Phú, Thủ Đức, HCM', '2010-01-05',
-     'PB04', 'CV04', NULL, 'Đang làm', 30000000),
+     'PB04', 'CV00', NULL, 'Đang làm', 30000000),
 
     ('NV009', 'Trần Văn Nhân',  '1982-06-20', 'Nam', '052206005766', '0353942866',
      'nhan.tv@congty.vn', 'Tăng Nhơn Phú, Thủ Đức, HCM', '2011-03-10',
-     'PB04', 'CV04', NULL, 'Đang làm', 30000000),
+     'PB04', 'CV00', NULL, 'Đang làm', 30000000),
 
     ('NV010', 'Đinh Viết Thiên', '1983-09-12', 'Nam', '052206005767', '0353942867',
      'thien.dv@congty.vn', 'Dĩ An, Bình Dương', '2012-07-01',
-     'PB04', 'CV04', NULL, 'Đang làm', 30000000);
+     'PB04', 'CV00', NULL, 'Đang làm', 30000000);
 
 -- Mật khẩu của mọi tài khoản mẫu: 123456 (Mã băm SHA-256)
 SET @MatKhau123456 = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';

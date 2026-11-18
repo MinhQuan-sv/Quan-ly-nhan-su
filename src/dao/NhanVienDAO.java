@@ -11,14 +11,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import model.NhanVien;
+import model.TaiKhoan;
 import util.KetNoiCSDL;
 import util.MatKhau;
 
 public class NhanVienDAO {
     public static final String MA_CV_QUAN_LY = "CV01";
 
-    private static final String SQL_LAY_CAP_DUOI =
-            "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
+    private static final String SQL_LAY_CAP_DUOI = "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
             + "       nv.Email, nv.DiaChi, nv.NgayVaoLam, nv.MaPB, nv.MaCV, nv.MaQuanLy, "
             + "       nv.TrangThai, nv.Luong, pb.TenPB, cv.TenCV, ql.HoTen AS TenQuanLy "
             + "FROM NHANVIEN nv "
@@ -28,8 +28,7 @@ public class NhanVienDAO {
             + "WHERE nv.MaQuanLy = ? AND nv.TrangThai <> ? "
             + "ORDER BY nv.HoTen";
 
-    private static final String SQL_TIM_CAP_DUOI =
-            "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
+    private static final String SQL_TIM_CAP_DUOI = "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
             + "       nv.Email, nv.DiaChi, nv.NgayVaoLam, nv.MaPB, nv.MaCV, nv.MaQuanLy, "
             + "       nv.TrangThai, nv.Luong, pb.TenPB, cv.TenCV, ql.HoTen AS TenQuanLy "
             + "FROM NHANVIEN nv "
@@ -42,8 +41,7 @@ public class NhanVienDAO {
             + "       OR COALESCE(nv.Email, '') LIKE ?) "
             + "ORDER BY nv.HoTen";
 
-    private static final String SQL_LAY_THEO_MA =
-            "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
+    private static final String SQL_LAY_THEO_MA = "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
             + "       nv.Email, nv.DiaChi, nv.NgayVaoLam, nv.MaPB, nv.MaCV, nv.MaQuanLy, "
             + "       nv.TrangThai, nv.Luong, pb.TenPB, cv.TenCV, ql.HoTen AS TenQuanLy "
             + "FROM NHANVIEN nv "
@@ -52,8 +50,7 @@ public class NhanVienDAO {
             + "LEFT JOIN NHANVIEN ql ON ql.MaNV = nv.MaQuanLy "
             + "WHERE nv.MaNV = ?";
 
-   private static final String SQL_LAY_QUAN_LY =
-            "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
+    private static final String SQL_LAY_QUAN_LY = "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
             + "       nv.Email, nv.DiaChi, nv.NgayVaoLam, nv.MaPB, nv.MaCV, nv.MaQuanLy, "
             + "       nv.TrangThai, nv.Luong, pb.TenPB, cv.TenCV, ql.HoTen AS TenQuanLy "
             + "FROM NHANVIEN nv "
@@ -64,69 +61,39 @@ public class NhanVienDAO {
             + "WHERE nv.TrangThai <> ? "
             + "ORDER BY nv.HoTen";
 
-    private static final String SQL_TANG_LUONG =
-            "UPDATE NHANVIEN SET Luong = ? WHERE MaNV = ?";
+    private static final String SQL_TANG_LUONG = "UPDATE NHANVIEN SET Luong = ? WHERE MaNV = ?";
 
-    private static final String SQL_THOI_VIEC_NHAN_VIEN =
-            "UPDATE NHANVIEN SET TrangThai = 'Đã nghỉ' WHERE MaNV = ?";
+    private static final String SQL_THOI_VIEC_NHAN_VIEN = "UPDATE NHANVIEN SET TrangThai = 'Đã nghỉ' WHERE MaNV = ?";
 
-    private static final String SQL_THOI_VIEC_TAI_KHOAN =
-            "UPDATE TAIKHOAN SET TrangThai = 'Bị khóa' WHERE MaNV = ?";
+    private static final String SQL_THOI_VIEC_TAI_KHOAN = "UPDATE TAIKHOAN SET TrangThai = 'Bị khóa' WHERE MaNV = ?";
 
-    private static final String SQL_THANG_CHUC_NHAN_VIEN =
-            "UPDATE NHANVIEN SET MaCV = ? WHERE MaNV = ?";
+    private static final String SQL_THANG_CHUC_NHAN_VIEN = "UPDATE NHANVIEN SET MaCV = ? WHERE MaNV = ?";
 
-    private static final String SQL_THANG_CHUC_TAI_KHOAN =
-            "UPDATE TAIKHOAN SET VaiTro = 'QuanLy' WHERE MaNV = ?";
+    private static final String SQL_THANG_CHUC_TAI_KHOAN = "UPDATE TAIKHOAN SET VaiTro = 'QuanLy' WHERE MaNV = ?";
 
-    private static final String SQL_DEM_CAP_DUOI =
-            "SELECT COUNT(*) FROM NHANVIEN WHERE MaQuanLy = ? AND TrangThai <> ?";
-    
-    private static final String SQL_LAY_TAT_CA_MA =
-            "SELECT MaNV FROM NHANVIEN";
+    private static final String SQL_DEM_CAP_DUOI = "SELECT COUNT(*) FROM NHANVIEN WHERE MaQuanLy = ? AND TrangThai <> ?";
 
-    private static final String SQL_THEM_NHAN_VIEN =
-            "INSERT INTO NHANVIEN "
+    private static final String SQL_LAY_TAT_CA_MA = "SELECT MaNV FROM NHANVIEN";
+
+    private static final String SQL_THEM_NHAN_VIEN = "INSERT INTO NHANVIEN "
             + "       (MaNV, HoTen, NgaySinh, GioiTinh, CCCD, SoDienThoai, Email, "
             + "        DiaChi, NgayVaoLam, MaPB, MaCV, MaQuanLy, TrangThai, Luong) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    private static final String SQL_THEM_TAI_KHOAN =
-            "INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, VaiTro, MaNV, TrangThai) "
+    private static final String SQL_THEM_TAI_KHOAN = "INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, VaiTro, MaNV, TrangThai) "
             + "VALUES (?, ?, ?, ?, ?)";
 
-    private static final String SQL_CAP_NHAT =
-            "UPDATE NHANVIEN SET "
+    private static final String SQL_CAP_NHAT = "UPDATE NHANVIEN SET "
             + "       HoTen = ?, NgaySinh = ?, GioiTinh = ?, CCCD = ?, SoDienThoai = ?, "
             + "       Email = ?, DiaChi = ?, NgayVaoLam = ?, MaPB = ?, MaCV = ?, "
             + "       TrangThai = ?, Luong = ? "
             + "WHERE  MaNV = ?";
 
-    private static final String SQL_DOI_TRANG_THAI =
-            "UPDATE NHANVIEN SET TrangThai = ? WHERE MaNV = ?";
+    private static final String SQL_DOI_TRANG_THAI = "UPDATE NHANVIEN SET TrangThai = ? WHERE MaNV = ?";
 
-    private static final String SQL_DEM_CCCD_TRUNG =
-            "SELECT COUNT(*) FROM NHANVIEN WHERE CCCD = ? AND MaNV <> ?";
+    private static final String SQL_DEM_CCCD_TRUNG = "SELECT COUNT(*) FROM NHANVIEN WHERE CCCD = ? AND MaNV <> ?";
 
-    private static final String SQL_DEM_EMAIL_TRUNG =
-            "SELECT COUNT(*) FROM NHANVIEN WHERE Email = ? AND MaNV <> ?";
-
-    public List<NhanVien> layCapDuoi(String maQuanLy) throws SQLException {
-            List<NhanVien> ketQua = new ArrayList<>();
-
-            try (Connection ketNoi = KetNoiCSDL.ketNoi();
-                PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_CAP_DUOI)) {
-                lenh.setString(1, maQuanLy);
-                lenh.setString(2, NhanVien.DA_NGHI);
-
-                try (ResultSet duLieu = lenh.executeQuery()) {
-                    while (duLieu.next()) {
-                        ketQua.add(docNhanVien(duLieu));
-                    }
-                }
-            }
-            return ketQua;
-        }
+    private static final String SQL_DEM_EMAIL_TRUNG = "SELECT COUNT(*) FROM NHANVIEN WHERE Email = ? AND MaNV <> ?";
 
     private static final String SQL_LAY_TAT_CA_DANG_LAM =
             "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
@@ -138,6 +105,23 @@ public class NhanVienDAO {
             + "LEFT JOIN NHANVIEN ql ON ql.MaNV = nv.MaQuanLy "
             + "WHERE nv.TrangThai = ? "
             + "ORDER BY nv.MaNV";
+
+    public List<NhanVien> layCapDuoi(String maQuanLy) throws SQLException {
+        List<NhanVien> ketQua = new ArrayList<>();
+
+        try (Connection ketNoi = KetNoiCSDL.ketNoi();
+                PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_CAP_DUOI)) {
+            lenh.setString(1, maQuanLy);
+            lenh.setString(2, NhanVien.DA_NGHI);
+
+            try (ResultSet duLieu = lenh.executeQuery()) {
+                while (duLieu.next()) {
+                    ketQua.add(docNhanVien(duLieu));
+                }
+            }
+        }
+        return ketQua;
+    }
 
     public List<NhanVien> layTatCaDangLam() throws SQLException {
         List<NhanVien> ketQua = new ArrayList<>();
@@ -154,33 +138,32 @@ public class NhanVienDAO {
         }
         return ketQua;
     }
-    
+
     public List<NhanVien> timCapDuoi(String maQuanLy, String tuKhoa) throws SQLException {
-            List<NhanVien> ketQua = new ArrayList<>();
+        List<NhanVien> ketQua = new ArrayList<>();
 
-            String mau = "%" + (tuKhoa == null ? "" : tuKhoa.trim()) + "%";
+        String mau = "%" + (tuKhoa == null ? "" : tuKhoa.trim()) + "%";
 
-            try (Connection ketNoi = KetNoiCSDL.ketNoi();
+        try (Connection ketNoi = KetNoiCSDL.ketNoi();
                 PreparedStatement lenh = ketNoi.prepareStatement(SQL_TIM_CAP_DUOI)) {
-                lenh.setString(1, maQuanLy);
-                lenh.setString(2, NhanVien.DA_NGHI);
-                for (int chiSo = 3; chiSo <= 6; chiSo++) {
-                    lenh.setString(chiSo, mau);
-                }
+            lenh.setString(1, maQuanLy);
+            lenh.setString(2, NhanVien.DA_NGHI);
+            for (int chiSo = 3; chiSo <= 6; chiSo++) {
+                lenh.setString(chiSo, mau);
+            }
 
-                try (ResultSet duLieu = lenh.executeQuery()) {
-                    while (duLieu.next()) {
-                        ketQua.add(docNhanVien(duLieu));
-                    }
+            try (ResultSet duLieu = lenh.executeQuery()) {
+                while (duLieu.next()) {
+                    ketQua.add(docNhanVien(duLieu));
                 }
             }
-            return ketQua;
+        }
+        return ketQua;
     }
-
 
     public NhanVien layTheoMa(String maNV) throws SQLException {
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
-             PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_THEO_MA)) {
+                PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_THEO_MA)) {
             lenh.setString(1, maNV);
 
             try (ResultSet duLieu = lenh.executeQuery()) {
@@ -190,23 +173,23 @@ public class NhanVienDAO {
     }
 
     public int demCapDuoi(String maQuanLy) throws SQLException {
-            try (Connection ketNoi = KetNoiCSDL.ketNoi();
+        try (Connection ketNoi = KetNoiCSDL.ketNoi();
                 PreparedStatement lenh = ketNoi.prepareStatement(SQL_DEM_CAP_DUOI)) {
-                lenh.setString(1, maQuanLy);
-                lenh.setString(2, NhanVien.DA_NGHI);
+            lenh.setString(1, maQuanLy);
+            lenh.setString(2, NhanVien.DA_NGHI);
 
-                try (ResultSet duLieu = lenh.executeQuery()) {
-                    return duLieu.next() ? duLieu.getInt(1) : 0;
-                }
+            try (ResultSet duLieu = lenh.executeQuery()) {
+                return duLieu.next() ? duLieu.getInt(1) : 0;
             }
         }
+    }
 
     public String sinhMaNhanVien() throws SQLException {
         int soLonNhat = 0;
 
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
-             PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_TAT_CA_MA);
-             ResultSet duLieu = lenh.executeQuery()) {
+                PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_TAT_CA_MA);
+                ResultSet duLieu = lenh.executeQuery()) {
             while (duLieu.next()) {
                 String maNV = duLieu.getString("MaNV");
                 if (maNV == null || maNV.length() <= 2) {
@@ -230,7 +213,7 @@ public class NhanVienDAO {
     }
 
     public void themKemTaiKhoan(NhanVien nhanVien, String tenDangNhap, String matKhauTho,
-                                String vaiTro) throws SQLException {
+            String vaiTro) throws SQLException {
         try (Connection ketNoi = KetNoiCSDL.ketNoi()) {
             boolean cheDoTuDongBanDau = ketNoi.getAutoCommit();
             ketNoi.setAutoCommit(false);
@@ -262,7 +245,7 @@ public class NhanVienDAO {
 
     public void capNhat(NhanVien nhanVien) throws SQLException {
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
-             PreparedStatement lenh = ketNoi.prepareStatement(SQL_CAP_NHAT)) {
+                PreparedStatement lenh = ketNoi.prepareStatement(SQL_CAP_NHAT)) {
             lenh.setString(1, nhanVien.getHoTen());
             ganNgay(lenh, 2, nhanVien.getNgaySinh());
             lenh.setString(3, nhanVien.getGioiTinh());
@@ -278,40 +261,56 @@ public class NhanVienDAO {
             lenh.setString(13, nhanVien.getMaNV());
 
             lenh.executeUpdate();
+
+            String vaiTroMoi = TaiKhoan.NHAN_VIEN;
+            if ("CV01".equals(nhanVien.getMaCV())) {
+                vaiTroMoi = TaiKhoan.QUAN_LY;
+            } else if ("CV00".equals(nhanVien.getMaCV())) {
+                vaiTroMoi = TaiKhoan.GIAM_DOC;
+            }
+            String sqlCapNhatQuyen = "UPDATE TAIKHOAN SET VaiTro = ? WHERE TenDangNhap = ?";
+
+            try (PreparedStatement lenhQuyen = ketNoi.prepareStatement(sqlCapNhatQuyen)) {
+                lenhQuyen.setString(1, vaiTroMoi);
+                lenhQuyen.setString(2, nhanVien.getMaNV().toLowerCase());
+
+                lenhQuyen.executeUpdate();
+            }
         }
     }
 
     public void doiTrangThai(String maNV, String trangThai) throws SQLException {
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
-             PreparedStatement lenh = ketNoi.prepareStatement(SQL_DOI_TRANG_THAI)) {
+                PreparedStatement lenh = ketNoi.prepareStatement(SQL_DOI_TRANG_THAI)) {
             lenh.setString(1, trangThai);
             lenh.setString(2, maNV);
             lenh.executeUpdate();
         }
     }
 
-   public List<NhanVien> layTatCaQuanLy() throws SQLException {
-            List<NhanVien> ketQua = new ArrayList<>();
+    public List<NhanVien> layTatCaQuanLy() throws SQLException {
+        List<NhanVien> ketQua = new ArrayList<>();
 
-            try (Connection ketNoi = KetNoiCSDL.ketNoi();
+        try (Connection ketNoi = KetNoiCSDL.ketNoi();
                 PreparedStatement lenh = ketNoi.prepareStatement(SQL_LAY_QUAN_LY)) {
-                lenh.setString(1, NhanVien.DA_NGHI);
+            lenh.setString(1, NhanVien.DA_NGHI);
 
-                try (ResultSet duLieu = lenh.executeQuery()) {
-                    while (duLieu.next()) {
-                        ketQua.add(docNhanVien(duLieu));
-                    }
+            try (ResultSet duLieu = lenh.executeQuery()) {
+                while (duLieu.next()) {
+                    ketQua.add(docNhanVien(duLieu));
                 }
             }
-            return ketQua;
         }
+        return ketQua;
+    }
+
     public void tangLuong(String maNV, BigDecimal luongMoi) throws SQLException {
         if (luongMoi == null || luongMoi.signum() <= 0) {
             throw new SQLException("Lương mới phải lớn hơn 0.");
         }
 
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
-             PreparedStatement lenh = ketNoi.prepareStatement(SQL_TANG_LUONG)) {
+                PreparedStatement lenh = ketNoi.prepareStatement(SQL_TANG_LUONG)) {
             lenh.setBigDecimal(1, luongMoi);
             lenh.setString(2, maNV);
 
@@ -384,7 +383,7 @@ public class NhanVienDAO {
         }
 
         try (Connection ketNoi = KetNoiCSDL.ketNoi();
-             PreparedStatement lenh = ketNoi.prepareStatement(cauLenh)) {
+                PreparedStatement lenh = ketNoi.prepareStatement(cauLenh)) {
             lenh.setString(1, giaTri.trim());
 
             lenh.setString(2, maNVDangSua == null ? "" : maNVDangSua);
@@ -452,5 +451,66 @@ public class NhanVienDAO {
     private static LocalDate docNgay(ResultSet duLieu, String tenCot) throws SQLException {
         Date ngay = duLieu.getDate(tenCot);
         return ngay == null ? null : ngay.toLocalDate();
+    }
+
+    public String layMaTruongPhong(String maPB) throws SQLException {
+        String sql = "SELECT MaNV FROM NhanVien "
+                + "WHERE MaPB = ? AND MaCV = ? AND TrangThai = ? LIMIT 1";
+        try (Connection ketnoi = KetNoiCSDL.ketNoi();
+                PreparedStatement ps = ketnoi.prepareStatement(sql)) {
+
+            ps.setString(1, maPB);
+            ps.setString(2, "CV01");
+            ps.setString(3, NhanVien.DANG_LAM);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("MaNV");
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean phongBanDaCoTruongPhong(String maPB) throws SQLException {
+        return layMaTruongPhong(maPB) != null;
+    }
+
+    public void capNhatQuanLyChoPhongBan(String maPB, String maQuanLy, String boQuaNV)
+            throws SQLException {
+        String sql = "UPDATE NhanVien SET MaQuanLy = ? "
+                + "WHERE MaPB = ? AND MaNV <> ?";
+        try (Connection conn = KetNoiCSDL.ketNoi();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maQuanLy);
+            ps.setString(2, maPB);
+            ps.setString(3, boQuaNV != null ? boQuaNV : "");
+            ps.executeUpdate();
+        }
+    }
+
+    public List<NhanVien> layTheoPhongBan(String maPB) throws SQLException {
+        List<NhanVien> danhSach = new ArrayList<>();
+        String sql = "SELECT nv.MaNV, nv.HoTen, nv.NgaySinh, nv.GioiTinh, nv.CCCD, nv.SoDienThoai, "
+                + "       nv.Email, nv.DiaChi, nv.NgayVaoLam, nv.MaPB, nv.MaCV, nv.MaQuanLy, "
+                + "       nv.TrangThai, nv.Luong, pb.TenPB, cv.TenCV, ql.HoTen AS TenQuanLy "
+                + "FROM NHANVIEN nv "
+                + "LEFT JOIN PHONGBAN pb ON pb.MaPB = nv.MaPB "
+                + "LEFT JOIN CHUCVU   cv ON cv.MaCV = nv.MaCV "
+                + "LEFT JOIN NHANVIEN ql ON ql.MaNV = nv.MaQuanLy "
+                + "WHERE nv.MaPB = ? AND nv.TrangThai <> ? "
+                + "ORDER BY nv.HoTen";
+
+        try (Connection conn = KetNoiCSDL.ketNoi();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPB);
+            ps.setString(2, NhanVien.DA_NGHI);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    danhSach.add(docNhanVien(rs));
+                }
+            }
+        }
+        return danhSach;
     }
 }

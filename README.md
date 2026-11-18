@@ -1,8 +1,7 @@
 # Quản lý Nhân sự & Chấm công (Java Swing + JDBC)
 
 Ứng dụng desktop viết **hoàn toàn bằng Java** (Swing + JDBC).
-Hỗ trợ **2 hệ CSDL**: **SQL Server** (đang cấu hình sẵn, chạy được ngay) và
-**MySQL 8.0** (có sẵn script + cấu hình mẫu, chỉ cần thêm driver và mật khẩu).
+Dùng CSDL **MySQL 8.0** (script tạo CSDL + dữ liệu mẫu có trong `database/mysql/`).
 
 ---
 
@@ -25,10 +24,9 @@ cột `TAIKHOAN.VaiTro` (`GiamDoc` / `QuanLy` / `NhanVien`).
 ```
 Btapnhom/
 ├── database/
-│   ├── QuanLyNhanSu.sql          Script cho SQL Server
-│   ├── mysql/QuanLyNhanSu.sql    Script cho MySQL 8.0 (utf8mb4)
-│   └── mysql/02_giam_doc_luong.sql  Nâng cấp CSDL cũ: thêm vai trò Giám đốc + cột lương
-├── db.properties                 Cấu hình kết nối (đang trỏ MySQL)
+│   └── mysql/QuanLyNhanSu.sql    Script tạo CSDL MySQL 8.0 (utf8mb4) + dữ liệu mẫu
+├── db.properties                 Cấu hình kết nối thật (có mật khẩu - KHÔNG đưa lên Git)
+├── db.properties.example         Bản mẫu để người khác copy thành db.properties
 ├── chay.bat                      Biên dịch + chạy
 ├── src/
 │   ├── Main.java                 Điểm khởi động
@@ -39,19 +37,24 @@ Btapnhom/
 │   └── view/                     LoginFrame, MainFrame, GiaoDien, ThongTinCaNhanPanel,
 │                                 NhanVienPanel, NhanVienFormDialog, ChamCongPanel,
 │                                 QuanLyChamCongPanel, GiamDocPanel, DoiMatKhauDialog
-├── tools/                        KiemTraKetNoi, ChayScriptSQL, ChuyenDuLieu, BamMatKhau
+├── tools/                        KiemTraKetNoi, ChayScriptSQL
 ├── lib/                          Driver JDBC (MySQL + SQL Server)
 ├── LENH.md                       Danh sách lệnh cần thực hiện
-├── TAI-LIEU-HAM.md               Giải thích chức năng từng hàm
 └── README.md
 ```
 
 ---
 
-## 3. Chạy ngay (SQL Server đã cấu hình sẵn)
+## 3. Chạy ngay (MySQL đã cấu hình sẵn)
 
-Máy đã có: JDK, SQL Server (TCP 1433 + Mixed Mode đã bật), driver
-`lib\mssql-jdbc-12.8.1.jre11.jar`, CSDL `QuanLyNhanSu` với dữ liệu mẫu.
+> **Nếu chưa có `db.properties`** (file này không đưa lên Git để tránh lộ mật khẩu):
+> ```bat
+> copy db.properties.example db.properties
+> ```
+> rồi mở `db.properties` thay `MAT_KHAU_CUA_BAN` bằng mật khẩu MySQL của bạn.
+
+Máy đã có: JDK, MySQL 8.0 đang chạy (cổng 3306), driver
+`lib\mysql-connector-j-26.10.0.jar`, CSDL `QuanLyNhanSu` với dữ liệu mẫu.
 
 **Cách 1 — chỉ cần chạy `Main.java`** (yêu cầu **JDK 22 trở lên** — máy đang dùng JDK 26):
 
@@ -88,16 +91,17 @@ java -cp "out;lib/*" Main
 
 Đăng nhập: `quanly` / `123456` hoặc `an.nv` / `123456`.
 
-Kiểm tra nhanh kết nối, không cần mở giao diện (dùng bản đã biên dịch trong `out`):
+Kiểm tra nhanh kết nối, không cần mở giao diện:
 
 ```bat
 java -cp "out;lib/*" tools\KiemTraKetNoi.java
 ```
 
-Nếu cần tạo lại CSDL SQL Server (LƯU Ý: **phải có `-f 65001`** để tiếng Việt không lỗi dấu):
+Nếu cần **tạo lại CSDL MySQL** (xoá sạch dữ liệu cũ và nạp lại dữ liệu mẫu):
 
 ```bat
-sqlcmd -S localhost -U sa -P 123456 -C -f 65001 -i "C:\Quann\Btapnhom\database\QuanLyNhanSu.sql"
+chay.bat build
+java -cp "out;lib/*" tools\ChayScriptSQL.java database\mysql\QuanLyNhanSu.sql
 ```
 
 ---
@@ -139,24 +143,12 @@ java -cp "out;lib/*" tools\KiemTraKetNoi.java
 chay.bat
 ```
 
-### Chuyển dữ liệu đang có ở SQL Server sang MySQL (tùy chọn)
-
-Script MySQL ở bước 3 chỉ tạo **dữ liệu mẫu**. Nếu muốn mang theo dữ liệu thật
-(nhân viên, tài khoản, chấm công đã nhập), chạy thêm công cụ chuyển dữ liệu:
-
-```bat
-java -cp "out;lib/*" tools\ChuyenDuLieu.java
-```
-
-Công cụ sẽ: đọc toàn bộ bảng từ SQL Server → xoá dữ liệu cũ trong MySQL → ghi lại
-đúng thứ tự khoá ngoại, rồi in số dòng của từng bảng ở cả hai bên.
-(Nếu tài khoản SQL Server không phải `sa`/`123456`, truyền vào sau lệnh:
-`tools\ChuyenDuLieu.java <user> <password>`.)
-
 ### Quay lại SQL Server
 
-Mở `db.properties`, bỏ `#` ở 4 dòng SQL Server (cuối file) và thêm `#` vào 4 dòng
-MySQL. Dữ liệu bên SQL Server vẫn còn nguyên.
+Driver SQL Server vẫn có trong `lib\`, nhưng **bản này không kèm script SQL Server**.
+Nếu cần dùng SQL Server: tự tạo CSDL theo cấu trúc trong `database\mysql\QuanLyNhanSu.sql`
+(đổi kiểu dữ liệu cho phù hợp), rồi bỏ `#` ở 4 dòng SQL Server cuối `db.properties`
+và thêm `#` vào 4 dòng MySQL.
 
 ---
 
@@ -174,7 +166,16 @@ MySQL. Dữ liệu bên SQL Server vẫn còn nguyên.
 
 Mật khẩu lưu dạng **SHA-256** (`8d969eef…adc6c92`), so khớp bằng `util.MatKhau.khop()`.
 Người dùng đổi mật khẩu ngay trong app: **Hệ thống → Đổi mật khẩu**.
-Nếu quên, dùng `tools\BamMatKhau.java` để tạo mã băm mới rồi `UPDATE TAIKHOAN SET MatKhau = '…'`.
+Nếu quên mật khẩu, tạo mã băm mới bằng PowerShell rồi `UPDATE` vào CSDL:
+
+```powershell
+[BitConverter]::ToString([Security.Cryptography.SHA256]::Create()
+  .ComputeHash([Text.Encoding]::UTF8.GetBytes('matkhaumoi'))).Replace('-','').ToLower()
+```
+
+```sql
+UPDATE TAIKHOAN SET MatKhau = '<mã-băm-vừa-tạo>' WHERE TenDangNhap = 'an.nv';
+```
 
 ---
 
@@ -199,10 +200,9 @@ Mỗi nhân viên chỉ có 1 bản ghi/ngày; dung sai `ChamCongService.PHUT_DU
   truy vấn cấp dưới luôn lọc `WHERE MaQuanLy = ?`.
 - **Giao dịch**: thêm nhân viên + tạo tài khoản trong một transaction (rollback nếu lỗi).
 - **Bảo mật**: `PreparedStatement` cho mọi câu lệnh; mật khẩu băm SHA-256.
-- **Tương thích CSDL**: dùng `COALESCE`, tham số hoá chuỗi tiếng Việt (không dùng
-  literal `N'…'`), nên chạy được cả SQL Server và MySQL.
-- **Tiếng Việt**: CSDL MySQL tạo với `utf8mb4`; script SQL Server khi nạp bằng `sqlcmd`
-  **phải** có `-f 65001`, nếu không dữ liệu lỗi dấu → app báo “Tài khoản đã bị khóa”.
+- **Tương thích CSDL**: dùng `COALESCE`, tham số hoá chuỗi tiếng Việt, nên có thể
+  chuyển sang SQL Server nếu tự viết lại script.
+- **Tiếng Việt**: CSDL MySQL tạo với `utf8mb4` nên lưu/hiển thị tiếng Việt đúng.
 - Cảnh báo `[serial]`/`[this-escape]` khi biên dịch bằng JDK 21+ là đặc thù của Swing.
 
 ---
@@ -213,8 +213,6 @@ Mỗi nhân viên chỉ có 1 bản ghi/ngày; dung sai `ChamCongService.PHUT_DU
 |---|---|---|
 | `KiemTraKetNoi.java` | kiểm tra kết nối theo `db.properties` (in cả hệ quản trị đang dùng) | `java -cp "out;lib/*" tools\KiemTraKetNoi.java` |
 | `ChayScriptSQL.java` | nạp file .sql qua JDBC (đọc UTF-8; hỗ trợ cả `GO` và `;`) | `java -cp "out;lib/*" tools\ChayScriptSQL.java database\mysql\QuanLyNhanSu.sql` |
-| `ChuyenDuLieu.java` | chép toàn bộ dữ liệu SQL Server → MySQL | `java -cp "out;lib/*" tools\ChuyenDuLieu.java` |
-| `BamMatKhau.java` | băm mật khẩu để đặt lại | `java -cp out tools\BamMatKhau.java 123456` |
 
 ---
 
@@ -230,12 +228,11 @@ Mỗi nhân viên chỉ có 1 bản ghi/ngày; dung sai `ChamCongService.PHUT_DU
 ## 11. Nếu bạn NHẬN folder này từ người khác
 
 Folder đã có sẵn mọi thứ: mã nguồn (`src`), **cả 2 driver JDBC** trong `lib`
-(`mysql-connector-j-26.10.0.jar` và `mssql-jdbc-12.8.1.jre11.jar`), script CSDL
-(`database/`), `db.properties`, `chay.bat`, tài liệu (`README.md`, `LENH.md`,
-`CLEANCODE.md`, `TAI-LIEU-HAM.md`).
+(`mysql-connector-j-26.10.0.jar` và `mssql-jdbc-12.8.1.jre11.jar`), script CSDL MySQL
+(`database/mysql/`), `db.properties.example`, `chay.bat`, tài liệu (`README.md`, `LENH.md`).
 
-Mặc định dự án dùng **MySQL 8.0**. Người nhận chỉ phải: cài JDK + MySQL, khai báo
-mật khẩu MySQL, tạo CSDL.
+Mặc định dự án dùng **MySQL 8.0**. Người nhận chỉ phải: cài JDK + MySQL, copy
+`db.properties.example` thành `db.properties` và điền mật khẩu, tạo CSDL.
 
 ### 11.1. Cần có trên máy
 
@@ -284,14 +281,11 @@ kết nối `localhost:3306` → `File → Open SQL Script…` → chọn
 
 ### 11.4. Nếu máy người nhận dùng SQL Server thay vì MySQL
 
+Bản này **không kèm script SQL Server** (chỉ có script MySQL). Nếu cần SQL Server:
+tự tạo CSDL dựa trên cấu trúc trong `database\mysql\QuanLyNhanSu.sql`, sau đó:
+
 ```bat
-:: 1) sửa db.properties: bỏ # ở 4 dòng SQL Server (cuối file), thêm # vào 4 dòng MySQL
-notepad db.properties
-
-:: 2) nạp script SQL Server — BẮT BUỘC có -f 65001 để tiếng Việt không lỗi dấu
-sqlcmd -S localhost -U sa -P <mật-khẩu-sa> -C -f 65001 -i "database\QuanLyNhanSu.sql"
-
-:: 3) chạy lại
+notepad db.properties      :: bỏ # ở 4 dòng SQL Server, thêm # vào 4 dòng MySQL
 java src\Main.java
 ```
 

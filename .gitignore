@@ -11,3 +11,6 @@ Thumbs.db
 desktop.ini
 
 QuanliNhansu.sql
+
+# File cau hinh that (co mat khau) - chi dung tren may, khong dua len Git
+db.properties
