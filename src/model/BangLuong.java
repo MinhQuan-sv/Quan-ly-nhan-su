@@ -3,16 +3,19 @@ package model;
 import java.math.BigDecimal;
 
 public class BangLuong {
+    
     private String maNV;
     private String hoTen;
     private String tenPB;
+    
     private BigDecimal luongCoBan;
+    private BigDecimal luongCong;
+    private BigDecimal tienPhat;
+    private BigDecimal luongThucLinh;
+    
     private int ngayCongChuan;
     private int ngayCongThucTe;
     private int soLanDiMuon;
-    private BigDecimal luongTheoNgay;
-    private BigDecimal tienPhat;
-    private BigDecimal luongThucLinh;
 
     public BangLuong() {
     }
@@ -49,6 +52,30 @@ public class BangLuong {
         this.luongCoBan = luongCoBan;
     }
 
+    public BigDecimal getLuongCong() {
+        return luongCong;
+    }
+
+    public void setLuongCong(BigDecimal luongCong) {
+        this.luongCong = luongCong;
+    }
+
+    public BigDecimal getTienPhat() {
+        return tienPhat;
+    }
+
+    public void setTienPhat(BigDecimal tienPhat) {
+        this.tienPhat = tienPhat;
+    }
+
+    public BigDecimal getLuongThucLinh() {
+        return luongThucLinh;
+    }
+
+    public void setLuongThucLinh(BigDecimal luongThucLinh) {
+        this.luongThucLinh = luongThucLinh;
+    }
+
     public int getNgayCongChuan() {
         return ngayCongChuan;
     }
@@ -71,29 +98,5 @@ public class BangLuong {
 
     public void setSoLanDiMuon(int soLanDiMuon) {
         this.soLanDiMuon = soLanDiMuon;
-    }
-
-    public BigDecimal getLuongTheoNgay() {
-        return luongTheoNgay;
-    }
-
-    public void setLuongTheoNgay(BigDecimal luongTheoNgay) {
-        this.luongTheoNgay = luongTheoNgay;
-    }
-
-    public BigDecimal getTienPhat() {
-        return tienPhat;
-    }
-
-    public void setTienPhat(BigDecimal tienPhat) {
-        this.tienPhat = tienPhat;
-    }
-
-    public BigDecimal getLuongThucLinh() {
-        return luongThucLinh;
-    }
-
-    public void setLuongThucLinh(BigDecimal luongThucLinh) {
-        this.luongThucLinh = luongThucLinh;
     }
 }
