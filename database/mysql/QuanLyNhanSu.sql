@@ -80,6 +80,24 @@ CREATE TABLE CHAMCONG (
     CONSTRAINT UQ_CC_NGAY      UNIQUE (MaNV, NgayChamCong)
 );
 
+/* ------------------------------- BẢNG LƯƠNG----------------------------- */
+CREATE TABLE BANGLUONG (
+    MaBangLuong   INT AUTO_INCREMENT PRIMARY KEY,
+    MaNV          VARCHAR(10)   NOT NULL,
+    Thang         INT           NOT NULL,
+    Nam           INT           NOT NULL,
+    LuongCoBan    DECIMAL(12,2) NOT NULL,
+    LuongCong     DECIMAL(12,2) NOT NULL,
+    NgayCongChuan INT           NOT NULL,
+    NgayCongThucTe INT          NOT NULL,
+    SoLanDiMuon   INT           NOT NULL,
+    TienPhat      DECIMAL(12,2) NOT NULL,
+    LuongThucLinh DECIMAL(12,2) NOT NULL,
+    NgayChot      DATE          NOT NULL,
+    CONSTRAINT FK_BL_NHANVIEN FOREIGN KEY (MaNV) REFERENCES NHANVIEN(MaNV),
+    CONSTRAINT UQ_BL_THANG    UNIQUE (MaNV, Thang, Nam)
+);
+
 /* ========================= DỮ LIỆU MẪU ========================= */
 
 INSERT INTO PHONGBAN (MaPB, TenPB, MoTa) VALUES
@@ -118,6 +136,14 @@ INSERT INTO NHANVIEN (MaNV, HoTen, NgaySinh, GioiTinh, CCCD, SoDienThoai, Email,
     ('NV005', 'Phạm Thu Dung',  '1997-11-30', 'Nữ',  '079097005555', '0955555666',
      'dung.pt@congty.vn', '56 Trường Chinh, Tân Bình, TP.HCM', '2022-07-11',
      'PB01', 'CV02', 'NV001', 'Tạm nghỉ', 12000000),
+
+	('NV006', 'Nguyễn Hoàng Nam', '1999-05-15', 'Nam', '079099006666', '0966666777',
+    'nam.nh@congty.vn', '102 Võ Văn Tần, Quận 3, TP.HCM', '2021-10-01',
+    'PB01', 'CV02', 'NV001', 'Đang làm', 12000000),
+    
+	('NV007', 'Lê Thị Mai', '1996-08-22', 'Nữ', '079096007777', '0977777888',
+    'mai.lt@congty.vn', '88 Nguyễn Đình Chiểu, Quận 1, TP.HCM', '2022-03-15',
+    'PB01', 'CV02', 'NV001', 'Đang làm', 12000000),
 
     ('NV008', 'Nguyễn Minh Quân', '1980-02-15', 'Nam', '052206005765', '0353942865',
      'quan.nm@congty.vn', 'Tăng Nhơn Phú, Thủ Đức, HCM', '2010-01-05',
