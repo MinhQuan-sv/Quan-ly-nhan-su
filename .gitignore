@@ -20,3 +20,6 @@ db.properties
 
 # Khong dua file Word len Git (chi giu ban PDF)
 *.docx
+
+# Anh trung gian khi dung slide (chi de tren may)
+_slide_hinh/
