@@ -17,3 +17,6 @@ db.properties
 
 # File tam cua Word (dang mo file .docx)
 ~$*
+
+# Khong dua file Word len Git (chi giu ban PDF)
+*.docx
