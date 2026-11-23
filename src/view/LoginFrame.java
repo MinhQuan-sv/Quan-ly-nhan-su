@@ -138,9 +138,10 @@ public class LoginFrame extends JFrame {
         than.add(hangNut, viTri);
 
         viTri.gridy = 7;
-        JLabel lblGoiY = new JLabel("<html>Tài khoản mẫu: <b>gd.quan</b> / 123456 (giám đốc), "
-                + "<b>quanly</b> / 123456 (quản lý), "
-                + "<b>an.nv</b> / 123456 (nhân viên)</html>");
+        JLabel lblGoiY = new JLabel("<html>Tài khoản mẫu (mật khẩu 123456):<br>"
+                + "<b>gd.quan</b>, <b>gd.nhan</b>, <b>gd.thien</b> - giám đốc<br>"
+                + "<b>thoai.bq</b>, <b>quang.lnn</b>, <b>nguyen.hg</b> - trưởng phòng<br>"
+                + "<b>nva</b> ... <b>lvf</b> - nhân viên</html>");
         lblGoiY.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblGoiY.setForeground(GiaoDien.CHU_NHAT);
         than.add(lblGoiY, viTri);

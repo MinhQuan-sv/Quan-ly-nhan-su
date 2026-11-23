@@ -19,7 +19,7 @@
 - **Bảng lương**: lương công = lương cơ bản × ngày công thực tế ÷ ngày công chuẩn, trừ tiền phạt đi muộn; có **Chốt lương** (lưu vào bảng `BANGLUONG`) và **Hủy chốt**.
 - **Bảo mật**: mật khẩu lưu dạng băm SHA-256; phân quyền kiểm tra ở cả giao diện lẫn câu lệnh SQL.
 - **Cấu hình**: đọc `db.properties` (file chứa mật khẩu, không đưa lên Git) — tạo bằng cách copy `db.properties.example`.
-- **Dữ liệu mẫu**: 10 nhân viên (3 giám đốc), 2 ca làm việc, dữ liệu chấm công tháng 10–11/2026.
+- **Dữ liệu mẫu**: 21 nhân viên (3 giám đốc, 3 trưởng phòng, 15 nhân viên) thuộc 4 phòng ban, 2 ca làm việc, 798 bản ghi chấm công tháng 10–11/2026.
 
 **Chạy** (JDK 22+):
 ```bat
@@ -27,7 +27,7 @@ copy db.properties.example db.properties   :: rồi điền mật khẩu MySQL
 java src\Main.java
 ```
 
-Hoặc chạy `chay.bat`. Tài khoản demo (mật khẩu `123456`): `gd.quan` (giám đốc), `quanly` (quản lý), `an.nv` (nhân viên).
+Hoặc chạy `chay.bat`. Tài khoản demo (mật khẩu `123456`): `gd.quan` (giám đốc), `thoai.bq` (trưởng phòng), `nva` (nhân viên).
 
 ## 3. Các chức năng, kiến thức được sử dụng trong bài
 

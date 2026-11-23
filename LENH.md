@@ -63,8 +63,8 @@ chay.bat
 java -cp "out;lib/*" Main
 ```
 
-Đăng nhập: `gd.quan` / `123456` (giám đốc), `quanly` / `123456` (quản lý),
-`an.nv` / `123456` (nhân viên).
+Đăng nhập: `gd.quan` / `123456` (giám đốc), `thoai.bq` / `123456` (trưởng phòng),
+`nva` / `123456` (nhân viên).
 
 ## 6. Tạo lại CSDL MySQL (xoá sạch dữ liệu cũ)
 
@@ -107,7 +107,7 @@ Tạo mã băm SHA-256 của mật khẩu mới:
 Rồi chạy trong MySQL:
 
 ```sql
-UPDATE TAIKHOAN SET MatKhau = '<mã-băm-vừa-tạo>' WHERE TenDangNhap = 'an.nv';
+UPDATE TAIKHOAN SET MatKhau = '<mã-băm-vừa-tạo>' WHERE TenDangNhap = 'nva';
 ```
 
 ## 9. Dọn dẹp (tùy chọn)
@@ -154,8 +154,12 @@ java src\Main.java
 
 ## Phụ lục B — Tài khoản mẫu (mật khẩu `123456`)
 
-| Tên đăng nhập | Vai trò |
-|---|---|
-| `gd.quan`, `gd.nhan`, `gd.thien` | Giám đốc |
-| `quanly` | Quản lý |
-| `an.nv`, `binh.tt`, `cuong.lh` | Nhân viên |
+| Tên đăng nhập | Vai trò | Nhân viên |
+|---|---|---|
+| `gd.quan`, `gd.nhan`, `gd.thien` | Giám đốc | NV008, NV009, NV010 (Ban Giám đốc) |
+| `thoai.bq` | Trưởng phòng | NV001 Bạch Quốc Thoại (Hành chính - Nhân sự) |
+| `quang.lnn` | Trưởng phòng | NV002 Lê Nguyễn Nhật Quang (Kế toán) |
+| `nguyen.hg` | Trưởng phòng | NV003 Hồ Gia Nguyễn (Kỹ thuật) |
+| `nva`, `nvb`, `nvc`, `nvd` | Nhân viên | NV011–NV014 (Hành chính - Nhân sự) |
+| `tva`, `tvb`, `tvc`, `tvd`, `tve` | Nhân viên | NV015–NV019 (Kế toán) |
+| `lva`, `lvb`, `lvc`, `lvd`, `lve`, `lvf` | Nhân viên | NV020–NV025 (Kỹ thuật) |
