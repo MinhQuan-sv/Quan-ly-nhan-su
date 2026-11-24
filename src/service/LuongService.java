@@ -25,19 +25,19 @@ public final class LuongService {
 
     private LuongService() {
     }
-
+    
     public static int ngayCongChuan(int thang, int nam) {
         YearMonth ym = YearMonth.of(nam, thang);
         int tongNgay = ym.lengthOfMonth();
-        int soChuNhat = 0;
+        int soNgayNghi = 0;
         
         for (int ngay = 1; ngay <= tongNgay; ngay++) {
-            if (ym.atDay(ngay).getDayOfWeek() == DayOfWeek.SUNDAY) {
-                soChuNhat++;
+            DayOfWeek thu = ym.atDay(ngay).getDayOfWeek();
+            if (thu == DayOfWeek.SUNDAY) {
+                soNgayNghi++;
             }
         }
-        
-        return tongNgay - soChuNhat;
+        return tongNgay - soNgayNghi;
     }
 
     public static List<BangLuong> tinhBangLuong(List<NhanVien> danhSach, int thang, int nam, ChamCongDAO chamCongDAO) throws SQLException {

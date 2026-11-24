@@ -277,7 +277,7 @@ public class BangLuongPanel extends JPanel {
         try {
             return Integer.valueOf(txtNam.getText().trim());
         } catch (RuntimeException loi) {
-            GiaoDien.canhBao(this, "Năm không hợp lệ, ví dụ: 2026.");
+            GiaoDien.canhBao(this, "Năm không hợp lệ.");
             return null;
         }
     }
